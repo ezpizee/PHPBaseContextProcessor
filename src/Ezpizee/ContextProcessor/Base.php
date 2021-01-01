@@ -28,6 +28,12 @@ abstract class Base
 
   public function __construct(Client $client = null) {if (!empty($client)) {$this->microserviceClient = $client;}}
 
+  abstract public function methods(): array;
+
+  abstract public function exec(): void;
+
+  abstract public function validRequiredParams(): bool;
+
   public function setMicroServiceClient(Client $client): void {$this->microserviceClient = $client;}
 
   public function setRequest(Request $request) {
@@ -36,12 +42,6 @@ abstract class Base
   }
 
   public function setRequestData(array $data): void {$this->requestData = $data;}
-
-  abstract public function methods(): array;
-
-  abstract public function exec(): void;
-
-  abstract public function validRequiredParams(): bool;
 
   protected final function getUriParam($key): string {return RequestEndpointValidator::getUriParam($key);}
 
