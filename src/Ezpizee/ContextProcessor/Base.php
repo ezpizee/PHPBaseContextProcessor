@@ -28,11 +28,15 @@ abstract class Base
 
   public function __construct(Client $client = null) {if (!empty($client)) {$this->microserviceClient = $client;}}
 
+  abstract public function requiredAccessToken(): bool;
+
   abstract public function methods(): array;
 
   abstract public function exec(): void;
 
   abstract public function validRequiredParams(): bool;
+
+  abstract public function isSystemUser(): bool;
 
   public function setMicroServiceClient(Client $client): void {$this->microserviceClient = $client;}
 
