@@ -1,0 +1,27 @@
+{
+    "name": "ezpizee/contextprocessor",
+    "description": "For Ezpizee's Base PHP Context Processor",
+    "homepage": "https://github.com/ezpizee/PHPBaseContextProcessor",
+    "type": "library",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Pang Khon",
+            "email": "khon.pang@ezpizee.com"
+        },
+        {
+            "name": "Sothea Nim",
+            "email": "sothea.nim@ezpizee.com.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.0"
+    },
+    "autoload": {
+        "psr-0": {
+            "Ezpizee\\ContextProcessor": "src/"
+        }
+    }
+}
