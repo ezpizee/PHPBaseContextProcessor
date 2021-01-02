@@ -52,6 +52,11 @@ abstract class Base
         return RequestEndpointValidator::getUriParam($key);
     }
 
+    public final function setContext(array $context): void
+    {
+        $this->context = $context;
+    }
+
     public final function setContextData(array $data): void
     {
         $this->context['data'] = $data;
