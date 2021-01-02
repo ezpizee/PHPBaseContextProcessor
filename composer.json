@@ -18,7 +18,8 @@
     ],
     "require": {
         "php": ">=7.0",
-        "ezpizee/utils": "dev-master"
+        "ezpizee/utils": "dev-master",
+        "psr/http-message": "^1.0"
     },
     "autoload": {
         "psr-0": {
