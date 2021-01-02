@@ -2,12 +2,15 @@
 
 namespace Ezpizee\ContextProcessor;
 
+use Ezpizee\Utils\ListModel;
 use Ezpizee\Utils\PHPAuth;
 use Ezpizee\Utils\Request;
+use Ezpizee\Utils\RequestBodyValidator;
 use Ezpizee\Utils\RequestEndpointValidator;
 use Ezpizee\Utils\Response;
 use Ezpizee\Utils\ResponseCodes;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 
 abstract class Base
 {
@@ -30,6 +33,8 @@ abstract class Base
 
     protected $requiredFieldsConfigData = [];
 
+    protected $isAllRequiredFieldsValid = false;
+
     public function __construct() {}
 
     abstract protected function allowedMethods(): array;
@@ -38,7 +43,6 @@ abstract class Base
     abstract protected function isValidAccessToken(): bool;
 
     abstract protected function validRequiredParams(): bool;
-    abstract protected function defaultRequiredParamsValidator(string $configFilePath=''): bool;
 
     abstract protected function isSystemUserOnly(): bool;
     abstract protected function isSystemUser(string $user, string $pwd): bool;
@@ -63,6 +67,100 @@ abstract class Base
         }
     }
 
+    /**
+     * Allow child class to invoke default fields validator
+     * required fields config format:
+     * [
+     *     {"name": "field_name", "type": "string|number", "size": 0|###, "defaultValue": ["element",...]},
+     *     ...
+     * ]
+     *
+     * @param string $configFilePath
+     *
+     * @return bool
+     */
+    protected final function defaultRequiredParamsValidator(string $configFilePath=''): bool
+    {
+        if (!$configFilePath) {
+            $configFilePath = ROOT_DIR . DS . str_replace(
+                    ['ContextProcessor', '\\'],
+                    ['', DS],
+                    get_called_class()
+                ) . "required-fields.json";
+        }
+        if (!file_exists($configFilePath)) {
+            $configFilePath = str_replace(DS.'Update'.DS, DS.'Add'.DS, $configFilePath);
+            if (!file_exists($configFilePath)) {
+                throw new RuntimeException(
+                    self::class.'.defaultRequiredParamsValidator: required fields config file missing '.$configFilePath,
+                    ResponseCodes::CODE_ERROR_INTERNAL_SERVER
+                );
+            }
+        }
+        $this->requiredFieldsConfigData = json_decode(file_get_contents($configFilePath), true);
+
+        $this->displayRequiredFields();
+
+        if (is_array($this->requiredFieldsConfigData) && sizeof($this->requiredFieldsConfigData)) {
+            foreach ($this->requiredFieldsConfigData as $field) {
+                if (isset($field['name']) && isset($field['type']) && isset($field['size']) && isset($field['defaultValue'])) {
+                    $field['type'] = strtolower($field['type']);
+                    $v = $this->request->getRequestParam($field['name']);
+                    if (!$this->request->hasRequestParam($field['name'])) {
+                        RequestBodyValidator::validateFile(new ListModel($field));
+                    }
+                    else {
+                        RequestBodyValidator::validate(new ListModel($field), $v);
+                    }
+                }
+                else {
+                    RequestBodyValidator::throwError(new ListModel($field));
+                }
+            }
+        }
+
+        $this->isAllRequiredFieldsValid = true;
+        return $this->isAllRequiredFieldsValid;
+    }
+
+    /**
+     * @param null   $arg
+     * @param string $key
+     *
+     * @return array
+     */
+    protected final function getFieldFromRequiredFields($arg=null, $key='name'): array
+    {
+        $data1 = [];
+        $data2 = [];
+        if ($arg !== null && $arg) {
+            if (is_string($arg) && file_exists($arg)) {
+                $data1 = json_decode(file_get_contents($arg), true);
+            }
+            else if (is_array($arg)) {
+                $data1 = $arg;
+            }
+            else if (is_object($arg)) {
+                $data1 = json_decode(json_encode($arg), true);
+            }
+            if (!empty($data1)) {
+                foreach ($data1 as $field) {
+                    if (isset($field[$key])) {
+                        $data2[] = $field[$key];
+                    }
+                }
+            }
+        }
+        else if (!empty($this->requiredFieldsConfigData)) {
+            foreach ($this->requiredFieldsConfigData as $field) {
+                if (isset($field[$key])) {
+                    $data2[] = $field[$key];
+                }
+            }
+        }
+        return $data2;
+    }
+
     public final function getContext(): array
     {
         if (in_array($this->request->method(), $this->allowedMethods())) {
@@ -82,12 +180,10 @@ abstract class Base
                             }
                         }
                         else {
-                            $this->displayRequiredFields();
                             $this->processContext();
                         }
                     }
                     else {
-                        $this->displayRequiredFields();
                         $this->processContext();
                     }
                 }
