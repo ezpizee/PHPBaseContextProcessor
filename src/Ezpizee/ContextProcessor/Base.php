@@ -28,13 +28,15 @@ abstract class Base
 
     abstract public function requiredAccessToken(): bool;
 
-    abstract public function methods(): array;
+    abstract public function allowedMethods(): array;
 
     abstract public function exec(): void;
 
     abstract public function validRequiredParams(): bool;
 
-    abstract public function isSystemUser(): bool;
+    abstract public function isSystemUserOnly(): bool;
+
+    abstract public function processContext(): void;
 
     public function setRequest(Request $request)
     {
