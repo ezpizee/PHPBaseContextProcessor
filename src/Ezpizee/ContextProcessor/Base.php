@@ -47,8 +47,6 @@ abstract class Base
     abstract protected function isSystemUserOnly(): bool;
     abstract protected function isSystemUser(string $user, string $pwd): bool;
 
-    abstract protected function processContext(): void;
-
     abstract protected function subRequest(string $method,
                                            string $path,
                                            string $query = '',
@@ -160,6 +158,8 @@ abstract class Base
         }
         return $data2;
     }
+
+    abstract public function processContext(): void;
 
     public final function getContext(): array
     {
