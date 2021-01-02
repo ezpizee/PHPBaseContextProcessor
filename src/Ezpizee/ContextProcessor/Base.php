@@ -2,7 +2,6 @@
 
 namespace Ezpizee\ContextProcessor;
 
-use Ezpizee\MicroservicesClient\Client;
 use Ezpizee\Utils\Request;
 use Ezpizee\Utils\RequestEndpointValidator;
 
@@ -19,14 +18,10 @@ abstract class Base
    * @var Request
    */
   protected $request;
-  /**
-   * @var Client
-   */
-  protected $microserviceClient;
 
   protected $requestData = [];
 
-  public function __construct(Client $client = null) {if (!empty($client)) {$this->microserviceClient = $client;}}
+  public function __construct() {}
 
   abstract public function requiredAccessToken(): bool;
 
@@ -37,8 +32,6 @@ abstract class Base
   abstract public function validRequiredParams(): bool;
 
   abstract public function isSystemUser(): bool;
-
-  public function setMicroServiceClient(Client $client): void {$this->microserviceClient = $client;}
 
   public function setRequest(Request $request) {
     $this->request = $request;
