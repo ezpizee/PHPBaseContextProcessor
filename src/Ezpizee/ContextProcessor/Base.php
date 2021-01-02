@@ -79,7 +79,7 @@ abstract class Base
      */
     protected final function defaultRequiredParamsValidator(string $configFilePath=''): bool
     {
-        if (!$configFilePath) {
+        if (!$configFilePath && defined('ROOT_DIR')) {
             $configFilePath = ROOT_DIR . DS . str_replace(
                     ['ContextProcessor', '\\'],
                     ['', DS],
