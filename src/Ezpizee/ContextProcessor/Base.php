@@ -99,7 +99,7 @@ abstract class Base
 
         $this->displayRequiredFields();
 
-        if (is_array($this->requiredFieldsConfigData) && sizeof($this->requiredFieldsConfigData)) {
+        if (!empty($this->requiredFieldsConfigData)) {
             foreach ($this->requiredFieldsConfigData as $field) {
                 if (isset($field['name']) && isset($field['type']) && isset($field['size']) && isset($field['defaultValue'])) {
                     $field['type'] = strtolower($field['type']);
