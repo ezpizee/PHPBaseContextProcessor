@@ -30,8 +30,6 @@ abstract class Base
 
     abstract public function allowedMethods(): array;
 
-    abstract public function exec(): void;
-
     abstract public function validRequiredParams(): bool;
 
     abstract public function isSystemUserOnly(): bool;
