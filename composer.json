@@ -17,7 +17,8 @@
         }
     ],
     "require": {
-        "php": ">=7.0"
+        "php": ">=7.0",
+        "ezpizee/utils": "dev-master"
     },
     "autoload": {
         "psr-0": {
