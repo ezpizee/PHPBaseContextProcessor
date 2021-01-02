@@ -59,7 +59,7 @@ abstract class Base
 
     protected final function displayRequiredFields(): void
     {
-        if ($this->request->getRequestParam('display') === 'required-fields') {
+        if ($this->getRequestData('display') === 'required-fields') {
             header('Content-Type: application/json');
             die(json_encode($this->requiredFieldsConfigData));
         }
@@ -103,11 +103,11 @@ abstract class Base
             foreach ($this->requiredFieldsConfigData as $field) {
                 if (isset($field['name']) && isset($field['type']) && isset($field['size']) && isset($field['defaultValue'])) {
                     $field['type'] = strtolower($field['type']);
-                    $v = $this->request->getRequestParam($field['name']);
-                    if (!$this->request->hasRequestParam($field['name'])) {
+                    if (!$this->hasRequestData($field['name'])) {
                         RequestBodyValidator::validateFile(new ListModel($field));
                     }
                     else {
+                        $v = $this->getRequestData($field['name']);
                         RequestBodyValidator::validate(new ListModel($field), $v);
                     }
                 }
@@ -163,7 +163,9 @@ abstract class Base
 
     public final function getContext(): array
     {
-        if (in_array($this->request->method(), $this->allowedMethods())) {
+        $method = !empty($this->request) ? $this->request->method() : strtoupper($_SERVER['REQUEST_METHOD']);
+
+        if (in_array($method, $this->allowedMethods())) {
             $invalidAccessToken = false;
             if ($this->requiredAccessToken()) {
                 $invalidAccessToken = !$this->isValidAccessToken();
@@ -270,5 +272,31 @@ abstract class Base
     public final function getContextDebug(): array
     {
         return empty($this->context['debug']) ? [] : $this->context['debug'];
+    }
+
+    private final function getRequestData(string $key) {
+        if (!empty($this->requestData) && isset($this->requestData[$key])) {
+            return $this->requestData[$key];
+        }
+        else if (!empty($this->request)) {
+            return $this->request->getRequestParam($key);
+        }
+        else if (isset($_GET[$key])) {
+            return $_GET[$key];
+        }
+        return null;
+    }
+
+    private final function hasRequestData(string $key): bool {
+        if (!empty($this->requestData) && isset($this->requestData[$key])) {
+            return true;
+        }
+        else if (!empty($this->request)) {
+            return $this->request->hasRequestParam($key);
+        }
+        else if (isset($_GET[$key])) {
+            return true;
+        }
+        return false;
     }
 }
