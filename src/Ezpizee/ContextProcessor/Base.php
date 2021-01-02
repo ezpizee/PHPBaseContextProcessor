@@ -72,11 +72,6 @@ abstract class Base
         $this->context['debug'] = $debug;
     }
 
-    public final function getContext(): array
-    {
-        return $this->context;
-    }
-
     public final function getContextCode(): int
     {
         return is_string($this->context['code']) ? (int)$this->context['code'] : $this->context['code'];
@@ -95,5 +90,10 @@ abstract class Base
     public final function getContextDebug(): array
     {
         return empty($this->context['debug']) ? [] : $this->context['debug'];
+    }
+
+    public function getContext(): array
+    {
+        return $this->context;
     }
 }
