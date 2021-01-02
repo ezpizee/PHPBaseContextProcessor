@@ -28,7 +28,7 @@ class CustomLoader
             if (in_array($class, self::$objects)) {
                 $passed = true;
             }
-            else if (in_array($parts[0], self::$packages)) {
+            else if (isset(self::$packages[$parts[0]])) {
                 $file = self::$packages[$parts[0]] . DS . str_replace(self::$delimiter, DS, $class) . '.php';
                 if (!file_exists($file)) {
                     if (strpos($file, DS.$parts[0].DS.$parts[0].DS) !== false) {
