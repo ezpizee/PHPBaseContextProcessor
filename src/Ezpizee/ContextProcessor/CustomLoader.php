@@ -7,6 +7,7 @@ class CustomLoader
     private static $packages = array();
     protected static $objects = array();
     protected static $delimiter = "\\";
+    protected static $files = array();
 
     private function __construct() {}
 
@@ -58,6 +59,7 @@ class CustomLoader
                 }
                 if (file_exists($file)) {
                     self::$objects[] = $class;
+                    self::$files[$class] = $file;
                     include $file;
                     $passed = true;
                 }
@@ -67,4 +69,12 @@ class CustomLoader
     }
 
     public static final function getLoadedObjects(): array {return self::$objects;}
+
+    public static final function getDir(string $class): string {
+        return isset(self::$files[$class]) ? dirname(self::$files[$class]) : "";
+    }
+
+    public static final function getScriptName(string $class): string {
+        return isset(self::$files[$class]) ? self::$files[$class] : "";
+    }
 }
