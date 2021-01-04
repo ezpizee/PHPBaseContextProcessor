@@ -80,15 +80,8 @@ abstract class Base
     protected final function defaultRequiredParamsValidator(string $configFilePath=''): bool
     {
         if (!$configFilePath) {
-            if (!defined('ROOT_DIR')) {
-                $dir = explode('/vendor/', __DIR__);
-                define('ROOT_DIR', $dir[0]);
-            }
-            $configFilePath = ROOT_DIR . DS . str_replace(
-                    ['ContextProcessor', '\\'],
-                    ['', DS],
-                    get_called_class()
-                ) . "required-fields.json";
+            $configFilePath = CustomLoader::getDir(get_called_class()) . DS . 'required-fields.json';
+            die($configFilePath);
         }
         if (!file_exists($configFilePath)) {
             $configFilePath = str_replace(DS.'Update'.DS, DS.'Add'.DS, $configFilePath);
