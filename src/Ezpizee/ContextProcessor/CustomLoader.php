@@ -11,13 +11,16 @@ class CustomLoader
 
     private function __construct() {}
 
-    public static function appendPackage(array $packages) {
+    public static function appendPackage(array $packages, bool $invokeExecute=false) {
         if (!empty($packages)) {
             foreach ($packages as $nameSpacePfx=>$dir) {
                 if (!isset(self::$packages[$nameSpacePfx])) {
                     self::$packages[$nameSpacePfx] = $dir;
                 }
             }
+        }
+        if ($invokeExecute === true) {
+            self::exec();
         }
     }
 

@@ -3,6 +3,7 @@
 namespace Ezpizee\ContextProcessor;
 
 use Ezpizee\Utils\ListModel;
+use Ezpizee\Utils\Logger;
 use Ezpizee\Utils\PHPAuth;
 use Ezpizee\Utils\Request;
 use Ezpizee\Utils\RequestBodyValidator;
@@ -295,5 +296,15 @@ abstract class Base
             return true;
         }
         return false;
+    }
+
+    public final function logger(string $msg, string $type='error')
+    {
+        Logger::{$type}($msg);
+    }
+
+    public final function testDisplay($val, bool $isJSON=false): void
+    {
+        Logger::testDisplay($val, $isJSON);
     }
 }
