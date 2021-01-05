@@ -82,7 +82,6 @@ abstract class Base
     {
         if (!$configFilePath) {
             $configFilePath = CustomLoader::getDir(get_called_class()) . DS . 'required-fields.json';
-            die($configFilePath);
         }
         if (!file_exists($configFilePath)) {
             $configFilePath = str_replace(DS.'Update'.DS, DS.'Add'.DS, $configFilePath);
@@ -298,8 +297,14 @@ abstract class Base
         return false;
     }
 
-    public final function logger(string $msg, string $type='error')
+    public final function logger($msg, string $type='error')
     {
+        if (is_array($msg) || is_object($msg)) {
+            $msg = json_encode($msg);
+        }
+        else if (!is_string($msg)) {
+            $msg = "".$msg;
+        }
         Logger::{$type}($msg);
     }
 
