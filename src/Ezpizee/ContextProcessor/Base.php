@@ -271,7 +271,8 @@ abstract class Base
         return empty($this->context['debug']) ? [] : $this->context['debug'];
     }
 
-    private final function getRequestData(string $key) {
+    private final function getRequestData(string $key)
+    {
         if (!empty($this->requestData) && isset($this->requestData[$key])) {
             return $this->requestData[$key];
         }
@@ -284,7 +285,8 @@ abstract class Base
         return null;
     }
 
-    private final function hasRequestData(string $key): bool {
+    private final function hasRequestData(string $key): bool
+    {
         if (!empty($this->requestData) && isset($this->requestData[$key])) {
             return true;
         }
