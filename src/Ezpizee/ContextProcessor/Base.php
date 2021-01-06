@@ -214,8 +214,8 @@ abstract class Base
         string $method,
         string $path,
         string $query = '',
-        array $headers = [],
-        array $cookies = [],
+        array $headers = array(),
+        array $cookies = array(),
         string $bodyContent = '',
         $response = null
     )
@@ -224,7 +224,8 @@ abstract class Base
         $context = $this->context;
         $context['message'] = 'Should be implemented by sub-class';
         $context['code'] = 500;
-        return new Response($context);
+        $context['data'] = [$query, $headers, $cookies, $bodyContent, $response];
+        return new Response($method, $path, json_encode($context));
     }
 
     protected final function getUriParam($key)
