@@ -10,7 +10,6 @@ use Ezpizee\Utils\RequestBodyValidator;
 use Ezpizee\Utils\RequestEndpointValidator;
 use Ezpizee\Utils\Response;
 use Ezpizee\Utils\ResponseCodes;
-use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 
 abstract class Base
@@ -218,7 +217,7 @@ abstract class Base
     array $headers = [],
     array $cookies = [],
     string $bodyContent = '',
-    ResponseInterface $response = null
+    $response = null
   )
   : Response;
 
