@@ -47,7 +47,8 @@ class CustomLoader
           }
           $passed = isset(self::$objects[$part]);
           if ($passed === false && file_exists($file)) {
-              self::$objects[] = $class;
+              self::$objects[$class] = true;
+              self::$files[$class] = $file;
               include $file;
               $passed = true;
           }
