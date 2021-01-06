@@ -29,16 +29,16 @@ class CustomLoader
 
     public static final function exec()
     {
-        spl_autoload_register(function ($class) {
+        spl_autoload_register(function ($class){
             $parts = explode(self::$delimiter, trim($class, self::$delimiter));
             $file = "";
             $part = "";
-            if (isset($parts[2]) && isset(self::$packages[$parts[0].self::$delimiter.$parts[1].self::$delimiter.$parts[2]])) {
-                $part = $parts[0].self::$delimiter.$parts[1].self::$delimiter.$parts[2];
+            if (isset($parts[2]) && isset(self::$packages[$parts[0] . self::$delimiter . $parts[1] . self::$delimiter . $parts[2]])) {
+                $part = $parts[0] . self::$delimiter . $parts[1] . self::$delimiter . $parts[2];
                 $file = self::$packages[$part] . DS . str_replace(self::$delimiter, DS, $class) . '.php';
             }
-            else if (isset($parts[1]) && isset(self::$packages[$parts[0].self::$delimiter.$parts[1]])) {
-                $part = $parts[0].self::$delimiter.$parts[1];
+            else if (isset($parts[1]) && isset(self::$packages[$parts[0] . self::$delimiter . $parts[1]])) {
+                $part = $parts[0] . self::$delimiter . $parts[1];
                 $file = self::$packages[$part] . DS . str_replace(self::$delimiter, DS, $class) . '.php';
             }
             else if (isset(self::$packages[$parts[0]])) {
