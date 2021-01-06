@@ -29,49 +29,30 @@ class CustomLoader
 
   public static final function exec()
   {
-    spl_autoload_register(function ($class) {
-      $parts = explode(self::$delimiter, trim($class, self::$delimiter));
-      $passed = false;
-      if (in_array($class, self::$objects)) {
-        $passed = true;
-      }
-      else if (isset(self::$packages[$parts[0]])) {
-        $file = self::$packages[$parts[0]] . DS . str_replace(self::$delimiter, DS, $class) . '.php';
-        if (!file_exists($file)) {
-          if (strpos($file, DS . $parts[0] . DS . $parts[0] . DS) !== false) {
-            $file = str_replace(DS . $parts[0] . DS . $parts[0] . DS, '', $file);
+      spl_autoload_register(function ($class) {
+          $parts = explode(self::$delimiter, trim($class, self::$delimiter));
+          $file = "";
+          $part = "";
+          if (isset($parts[2]) && isset(self::$packages[$parts[0].self::$delimiter.$parts[1].self::$delimiter.$parts[2]])) {
+              $part = $parts[0].self::$delimiter.$parts[1].self::$delimiter.$parts[2];
+              $file = self::$packages[$part] . DS . str_replace(self::$delimiter, DS, $class) . '.php';
           }
-          else if (strpos($file, DS . strtolower($parts[0]) . DS . $parts[0] . DS) !== false) {
-            $tmp = str_replace(DS . strtolower($parts[0]) . DS . $parts[0] . DS, DS . $parts[0] . DS, $file);
-            if (!file_exists($tmp)) {
-              $tmp = str_replace(DS . strtolower($parts[0]) . DS . $parts[0] . DS, DS . strtolower($parts[0]) . DS, $file);
-            }
-            $file = $tmp;
+          else if (isset($parts[1]) && isset(self::$packages[$parts[0].self::$delimiter.$parts[1]])) {
+              $part = $parts[0].self::$delimiter.$parts[1];
+              $file = self::$packages[$part] . DS . str_replace(self::$delimiter, DS, $class) . '.php';
           }
-          else if (strpos($file, DS . $parts[0] . DS . strtolower($parts[0]) . DS) !== false) {
-            $tmp = str_replace(DS . $parts[0] . DS . strtolower($parts[0]) . DS, DS . $parts[0] . DS, $file);
-            if (!file_exists($tmp)) {
-              $tmp = str_replace(DS . $parts[0] . DS . strtolower($parts[0]) . DS, DS . strtolower($parts[0]) . DS, $file);
-            }
-            $file = $tmp;
+          else if (isset(self::$packages[$parts[0]])) {
+              $part = $parts[0];
+              $file = self::$packages[$part] . DS . str_replace(self::$delimiter, DS, $class) . '.php';
           }
-          else if (strpos($file, DS . strtolower($parts[0]) . DS . strtolower($parts[0]) . DS) !== false) {
-            $tmp = str_replace(DS . strtolower($parts[0]) . DS . strtolower($parts[0]) . DS, DS . $parts[0] . DS, $file);
-            if (!file_exists($tmp)) {
-              $tmp = str_replace(DS . strtolower($parts[0]) . DS . strtolower($parts[0]) . DS, DS . strtolower($parts[0]) . DS, $file);
-            }
-            $file = $tmp;
+          $passed = isset(self::$objects[$part]);
+          if ($passed === false && file_exists($file)) {
+              self::$objects[] = $class;
+              include $file;
+              $passed = true;
           }
-        }
-        if (file_exists($file)) {
-          self::$objects[] = $class;
-          self::$files[$class] = $file;
-          include $file;
-          $passed = true;
-        }
-      }
-      return $passed;
-    });
+          return $passed;
+      });
   }
 
   public static final function getLoadedObjects()
