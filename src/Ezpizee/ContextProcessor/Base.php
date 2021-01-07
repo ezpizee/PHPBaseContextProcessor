@@ -250,10 +250,10 @@ abstract class Base
     : bool
     {
         if (!$configFilePath) {
-            $configFilePath = CustomLoader::getDir(get_called_class()) . DS . 'required-fields.json';
+            $configFilePath = CustomLoader::getDir(get_called_class()) . EZPIZEE_DS. 'required-fields.json';
         }
         if (!file_exists($configFilePath)) {
-            $configFilePath = str_replace(DS . 'Update' . DS, DS . 'Add' . DS, $configFilePath);
+            $configFilePath = str_replace(EZPIZEE_DS .'Update' . EZPIZEE_DS, EZPIZEE_DS . 'Add' . EZPIZEE_DS, $configFilePath);
             if (!file_exists($configFilePath)) {
                 throw new RuntimeException(
                     self::class . '.defaultRequiredParamsValidator: required fields config file missing ' . $configFilePath,
