@@ -298,11 +298,11 @@ abstract class Base
 
     private final function getRequestData(string $key)
     {
-        if (!empty($this->requestData) && isset($this->requestData[$key])) {
-            return $this->requestData[$key];
-        }
-        else if (!empty($this->request)) {
+        if (!empty($this->request)) {
             return $this->request->getRequestParam($key);
+        }
+        else if (!empty($this->requestData) && isset($this->requestData[$key])) {
+            return $this->requestData[$key];
         }
         else if (isset($_GET[$key])) {
             return $_GET[$key];
@@ -313,11 +313,11 @@ abstract class Base
     private final function hasRequestData(string $key)
     : bool
     {
-        if (!empty($this->requestData) && isset($this->requestData[$key])) {
-            return true;
-        }
-        else if (!empty($this->request)) {
+        if (!empty($this->request)) {
             return $this->request->hasRequestParam($key);
+        }
+        else if (!empty($this->requestData) && isset($this->requestData[$key])) {
+            return true;
         }
         else if (isset($_GET[$key])) {
             return true;
