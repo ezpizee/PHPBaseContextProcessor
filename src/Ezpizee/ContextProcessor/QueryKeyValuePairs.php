@@ -163,11 +163,11 @@ class QueryKeyValuePairs implements JsonSerializable
                 $this->keys = $keys;
             }
             else {
-                throw new RuntimeException('Invalid keys ('.self::class.'->setKeys)', 500);
+                throw new RuntimeException('Invalid keys ('.self::class.'->setPrimaryKeys)', 500);
             }
         }
         else {
-            throw new RuntimeException('keys is empty ('.self::class.'->setKeys)', 500);
+            throw new RuntimeException('keys is empty ('.self::class.'->setPrimaryKeys)', 500);
         }
     }
     public function getPrimaryKeys(): array {return $this->keys;}
