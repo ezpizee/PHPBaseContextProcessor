@@ -179,7 +179,7 @@ class QueryKeyValuePairs implements JsonSerializable
             $this->primaryKeysValues[$key] = $value;
         }
         else {
-            throw new RuntimeException('key does not exist ('.self::class.'->addKeysValue)', 500);
+            throw new RuntimeException('key does not exist ('.self::class.'->addPrimaryKeysValue)', 500);
         }
     }
     public function getPrimaryKeyValue(string $key): string {return isset($this->primaryKeysValues[$key]) ? $this->primaryKeysValues[$key] : "";}
