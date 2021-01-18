@@ -1,6 +1,6 @@
 <?php
 
-namespace ContextProcessor;
+namespace Ezpizee\ContextProcessor;
 
 use JsonSerializable;
 use mysqli;
