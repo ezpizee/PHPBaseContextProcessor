@@ -84,6 +84,7 @@ class QueryKeyValuePairs implements JsonSerializable
     {
         if (!isset($this->fields[$key])) {
             $this->fields[$key] = $key;
+            $this->formatValue($val);
             $this->values[$key] = $val;
         }
     }
@@ -249,6 +250,9 @@ class QueryKeyValuePairs implements JsonSerializable
                     }
                 }
             }
+        }
+        else {
+            $value = '';
         }
     }
 
