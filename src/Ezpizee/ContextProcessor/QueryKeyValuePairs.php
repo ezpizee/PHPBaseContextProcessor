@@ -241,7 +241,7 @@ class QueryKeyValuePairs implements JsonSerializable
     private function formatValue(&$value)
     : void
     {
-        if (!empty($value)) {
+        if ($value !== null) {
             $value = is_array($value) || is_object($value) ? json_encode($value) : (is_null($value) ? '' : $value);
             if (strlen($value) > 1) {
                 if (substr($value, 0, 1) === "'") {
