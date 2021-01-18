@@ -10,7 +10,7 @@ class QueryKeyValuePairs implements JsonSerializable
     private $tableFields = [];
     private $fields = [];
     private $values = [];
-    private $keys = [];
+    private $primaryKeys = [];
     private $primaryKeysValues = [];
     private $condition = '';
     private $existentCondition = '';
@@ -126,8 +126,8 @@ class QueryKeyValuePairs implements JsonSerializable
 
     public function isValidPrimaryKeys(): bool {
         if (!empty($this->tableFields)) {
-            if (!empty($this->keys)) {
-                foreach ($this->keys as $key) {
+            if (!empty($this->primaryKeys)) {
+                foreach ($this->primaryKeys as $key) {
                     if (!(!empty($key) && (
                             in_array($key, $this->tableFields) ||
                             in_array(strtolower($key), $this->tableFields) ||
@@ -149,18 +149,18 @@ class QueryKeyValuePairs implements JsonSerializable
     public function isInPrimaryKeys(string $field)
     : bool
     {
-        return in_array($field, $this->keys) || in_array(strtolower($field), $this->keys) || in_array(strtoupper($field), $this->keys);
+        return in_array($field, $this->primaryKeys) || in_array(strtolower($field), $this->primaryKeys) || in_array(strtoupper($field), $this->primaryKeys);
     }
     public function setPrimaryKeys($keys): void {
         if (!empty($keys) && !is_numeric($keys) && !is_bool($keys)) {
             if (is_string($keys)) {
-                $this->keys = explode(',', $keys);
+                $this->primaryKeys = explode(',', $keys);
             }
             else if (is_object($keys)) {
-                $this->keys = json_decode(json_encode($keys), true);
+                $this->primaryKeys = json_decode(json_encode($keys), true);
             }
             else if (is_array($keys)) {
-                $this->keys = $keys;
+                $this->primaryKeys = $keys;
             }
             else {
                 throw new RuntimeException('Invalid keys ('.self::class.'->setPrimaryKeys)', 500);
@@ -170,12 +170,12 @@ class QueryKeyValuePairs implements JsonSerializable
             throw new RuntimeException('keys is empty ('.self::class.'->setPrimaryKeys)', 500);
         }
     }
-    public function getPrimaryKeys(): array {return $this->keys;}
-    public function getNumPrimaryKeys(): int {return sizeof($this->keys);}
-    public function getPrimaryKeysAsString(): string {return implode(',', $this->keys);}
+    public function getPrimaryKeys(): array {return $this->primaryKeys;}
+    public function getNumPrimaryKeys(): int {return sizeof($this->primaryKeys);}
+    public function getPrimaryKeysAsString(): string {return implode(',', $this->primaryKeys);}
 
     public function addPrimaryKeysValue(string $key, string $value): void {
-        if (in_array($key, $this->keys)) {
+        if (in_array($key, $this->primaryKeys)) {
             $this->primaryKeysValues[$key] = $value;
         }
         else {
@@ -198,7 +198,7 @@ class QueryKeyValuePairs implements JsonSerializable
         $this->tableFields = [];
         $this->fields = [];
         $this->values = [];
-        $this->keys = [];
+        $this->primaryKeys = [];
         $this->primaryKeysValues = [];
         $this->condition = '';
         $this->existentCondition = '';
