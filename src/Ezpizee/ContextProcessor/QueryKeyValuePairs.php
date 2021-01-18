@@ -15,6 +15,7 @@ class QueryKeyValuePairs implements JsonSerializable
     private $condition = '';
     private $existentCondition = '';
     private $multiInsertFieldValues = [];
+    private $omitSqlQuoteValues = [];
 
     public function __construct(array $tableFields=array())
     {
@@ -56,7 +57,7 @@ class QueryKeyValuePairs implements JsonSerializable
         return $keyValue;
     }
 
-    public function addFieldValue($key, $value)
+    public function addFieldValue($key, $value, bool $omitSqlQuote=false)
     : void
     {
         $key = str_replace("`", '', $key);
@@ -75,6 +76,7 @@ class QueryKeyValuePairs implements JsonSerializable
             $this->formatValue($value);
             $this->fields[$key] = $key;
             $this->values[$key] = $value;
+            $this->omitSqlQuoteValues[$key] = $omitSqlQuote;
         }
     }
     public function setFieldValueIfNotExists($key, $val)
@@ -221,6 +223,7 @@ class QueryKeyValuePairs implements JsonSerializable
     public function getFieldsAsString(): string {return implode(',', $this->fields);}
     public function getValuesAsString(): string {return implode(',', $this->values);}
     public function hasValue(string $key): bool {return isset($this->values[$key]);}
+    public function isOmitSqlQuote(string $key): bool {return isset($this->omitSqlQuoteValues[$key]) && $this->omitSqlQuoteValues[$key] === true;}
 
     public function reset()
     : void
