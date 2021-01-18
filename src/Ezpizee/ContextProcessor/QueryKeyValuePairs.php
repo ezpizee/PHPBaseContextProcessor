@@ -14,17 +14,52 @@ class QueryKeyValuePairs implements JsonSerializable
     private $primaryKeysValues = [];
     private $condition = '';
     private $existentCondition = '';
+    private $multiInsertFieldValues = [];
 
     public function __construct(array $tableFields=array())
     {
         $this->tableFields = $tableFields;
     }
 
+    public function hasMultiInsertFieldValues(): bool {return !empty($this->multiInsertFieldValues);}
+    public function addMultiInsertFieldValues(string $key, $value): void {
+        if (empty($key) || is_numeric($key)) {
+            throw new RuntimeException('Invalid key ('.self::class.'->addMultiInsertFieldValues)', 500);
+        }
+        if (!isset($this->multiInsertFieldValues[$key])) {
+            $this->multiInsertFieldValues[$key] = [];
+        }
+        $this->formatValue($value);
+        $this->multiInsertFieldValues[$key][] = $value;
+    }
+    public function getMultiInsertFieldValues(): KeyValue {
+        $keyValue = new KeyValue();
+        if (!empty($this->multiInsertFieldValues)) {
+            $keyValue->keys = array_keys($this->multiInsertFieldValues);
+            $i = 0;
+            foreach ($this->multiInsertFieldValues as $values) {
+                if (!isset($keyValue->values[$i])) {
+                    $keyValue->values[$i] = [];
+                }
+                foreach ($values as $value) {
+                    $keyValue->values[$i][] = $value;
+                }
+                $i++;
+            }
+            if (!$keyValue->isBalance()) {
+                throw new RuntimeException('Invalid multi insert field values ('.self::class.'->getMultiInsertFieldValues)', 500);
+            }
+        }
+        else {
+            throw new RuntimeException('Empty multi insert field values ('.self::class.'->getMultiInsertFieldValues)', 500);
+        }
+        return $keyValue;
+    }
+
     public function addFieldValue($key, $value)
     : void
     {
         $key = str_replace("`", '', $key);
-        $value = is_array($value) || is_object($value) ? json_encode($value) : (is_null($value) ? '' : $value);
         if (!empty($this->tableFields)) {
             if (in_array(strtolower($key), $this->tableFields)) {
                 $key = strtolower($key);
@@ -37,13 +72,7 @@ class QueryKeyValuePairs implements JsonSerializable
             }
         }
         if (!empty($key)) {
-            if (!empty($value)) {
-                if (substr($value, 0, 1) === "'") {
-                    if ($value[strlen($value) - 1] === "'") {
-                        $value = substr($value, 1, strlen($value) - 2);
-                    }
-                }
-            }
+            $this->formatValue($value);
             $this->fields[$key] = $key;
             $this->values[$key] = $value;
         }
@@ -202,6 +231,21 @@ class QueryKeyValuePairs implements JsonSerializable
         $this->primaryKeysValues = [];
         $this->condition = '';
         $this->existentCondition = '';
+    }
+
+    private function formatValue(&$value)
+    : void
+    {
+        if (!empty($value)) {
+            $value = is_array($value) || is_object($value) ? json_encode($value) : (is_null($value) ? '' : $value);
+            if (strlen($value) > 1) {
+                if (substr($value, 0, 1) === "'") {
+                    if ($value[strlen($value) - 1] === "'") {
+                        $value = substr($value, 1, strlen($value) - 2);
+                    }
+                }
+            }
+        }
     }
 
     public function jsonSerialize()
