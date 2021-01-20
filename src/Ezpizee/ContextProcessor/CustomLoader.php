@@ -13,6 +13,8 @@ class CustomLoader
     {
     }
 
+    public static function packageExists(string $namespace): bool {return isset(self::$packages[$namespace]);}
+
     public static function appendPackage(array $packages, bool $invokeExecute = false)
     {
         if (!empty($packages)) {
@@ -46,7 +48,7 @@ class CustomLoader
                 $file = self::$packages[$part] . EZPIZEE_DS. str_replace(self::$delimiter, EZPIZEE_DS, $class) . '.php';
             }
             $passed = isset(self::$objects[$part]);
-            if ($passed === false && file_exists($file)) {
+            if (!empty($file) && $passed === false && file_exists($file)) {
                 self::$objects[$class] = true;
                 self::$files[$class] = $file;
                 include $file;
