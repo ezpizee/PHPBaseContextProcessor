@@ -3,14 +3,15 @@
 namespace Ezpizee\ContextProcessor;
 
 use JsonSerializable;
-use mysqli;
-use mysqli_result;
+use PDO;
+use PDOException;
+use PDOStatement;
 use RuntimeException;
 
 class DBO implements JsonSerializable
 {
     /**
-     * @var mysqli
+     * @var PDO
      */
     private $conn;
 
@@ -42,12 +43,16 @@ class DBO implements JsonSerializable
     private function connect()
     : void
     {
-        $this->conn = new mysqli($this->config->host, $this->config->username, $this->config->password, $this->config->dbName, $this->config->port);
-        if ($this->conn->error) {
-            throw new RuntimeException("Failed to connect to MySQL: " . $this->conn->error . ' (' . $this->config . ')');
+        try {
+            $this->conn = new PDO(
+                $this->config->dsn,
+                $this->config->username,
+                $this->config->password,
+                $this->config->options
+            );
         }
-        else if ($this->conn->connect_error) {
-            throw new RuntimeException("Failed to connect to MySQL: " . $this->conn->connect_error . ' (' . $this->config . ')');
+        catch (PDOException $e) {
+            throw new RuntimeException("Failed to connect to MySQL: " . $e->getMessage() . ' (' . $this->config . ')');
         }
     }
 
@@ -67,17 +72,17 @@ class DBO implements JsonSerializable
     : void
     {
         if ($this->isConnected()) {
-            $this->conn->close();
+            $this->conn = null;
         }
     }
 
     public function isConnected()
     : bool
     {
-        return $this->conn instanceof mysqli && !$this->conn->connect_errno;
+        return $this->conn instanceof PDO;
     }
 
-    public function lastInsertId() { return $this->isConnected() ? $this->conn->insert_id : 0; }
+    public function lastInsertId() { return $this->isConnected() ? $this->conn->lastInsertId() : 0; }
 
     public function exec(string $query = '')
     : bool
@@ -153,41 +158,42 @@ class DBO implements JsonSerializable
             if ($isAssoc) {
                 $result = $this->conn->query($query);
                 if ($result) {
-                    $row = $result->fetch_assoc();
+                    $row = $result->fetch(PDO::FETCH_ASSOC);
                     if (!empty($row)) {
                         $this->results[] = $row;
                     }
                 }
-                else if ($this->conn->error) {
-                    $this->errors[] = $this->conn->error;
+                else if (!empty($this->conn->errorInfo())) {
+                    $this->errors[] = $this->conn->errorInfo();
                 }
             }
             else {
                 $result = $this->conn->query($query);
                 if ($result) {
-                    while ($row = $result->fetch_assoc()) {
+                    $rows = $result->fetchAll(PDO::FETCH_ASSOC);
+                    foreach ($rows as $row) {
                         if (!empty($row)) {
                             $this->results[] = $row;
                         }
                     }
                 }
-                else if ($this->conn->error) {
-                    $this->errors[] = $this->conn->error;
+                else if (!empty($this->conn->errorInfo())) {
+                    $this->errors[] = $this->conn->errorInfo();
                 }
             }
         }
         else {
             $result = $this->conn->query($query);
-            if (is_bool($result) && !$result && $this->conn->error) {
+            if (is_bool($result) && !$result && !empty($this->conn->errorInfo())) {
                 if ($this->stopWhenError || $stopWhenError) {
-                    throw new RuntimeException(DBO::class . ".query: " . $this->conn->error . "\n");
+                    throw new RuntimeException(DBO::class . ".query: " . json_encode($this->conn->errorInfo()) . "\n");
                 }
                 else {
-                    $this->errors[] = $this->conn->error;
+                    $this->errors[] = $this->conn->errorInfo();
                 }
             }
-            else if ($result instanceof mysqli_result && $this->keepResults) {
-                $this->results[] = $result->fetch_all();
+            else if ($result instanceof PDOStatement && $this->keepResults) {
+                $this->results[] = $result->fetchAll(PDO::FETCH_ASSOC);
             }
         }
     }
@@ -259,7 +265,7 @@ class DBO implements JsonSerializable
     public function quote(string $str)
     : string
     {
-        return $this->isConnected() ? "'" . $this->conn->real_escape_string($str) . "'" : $str;
+        return $this->isConnected() ? $this->conn->quote($str) : $str;
     }
 
     public function loadAssoc(string $query = '')

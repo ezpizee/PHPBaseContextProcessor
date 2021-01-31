@@ -29,7 +29,7 @@ class DBCredentials implements JsonSerializable
         }
 
         if (isset($config['host'])) {
-            $this->host = $config['host'];
+            $this->host = $config['host'] === 'localhost' ? '127.0.0.1' : $config['host'];
         }
 
         if (isset($config['port'])) {
