@@ -2,6 +2,7 @@
 
 namespace Ezpizee\ContextProcessor;
 
+use Ezpizee\Utils\Logger;
 use JsonSerializable;
 use PDO;
 use PDOException;
@@ -219,7 +220,7 @@ class DBO implements JsonSerializable
         }
         if ($this->stm) {
             $this->reset();
-            $arr = explode("\n", $this->stm);
+            $arr = explode(";\n", $this->stm);
             if (sizeof($arr) > 1) {
                 $query = '';
                 foreach ($arr as $line) {
