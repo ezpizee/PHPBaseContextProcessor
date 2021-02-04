@@ -29,7 +29,7 @@ class DBCredentials implements JsonSerializable
         }
 
         if (isset($config['host'])) {
-            $this->host = $config['host'];
+            $this->host = $config['host'] === 'localhost' ? '127.0.0.1' : $config['host'];
         }
 
         if (isset($config['port'])) {
@@ -90,9 +90,14 @@ class DBCredentials implements JsonSerializable
             $this->prefix = '';
         }
 
-        $this->setDSN();
+        if (isset($config['options'])) {
+            $this->options = $config['options'];
+        }
+        else {
+            $this->setOptions();
+        }
 
-        $this->setOptions();
+        $this->setDSN();
     }
 
     private function setDSN()
