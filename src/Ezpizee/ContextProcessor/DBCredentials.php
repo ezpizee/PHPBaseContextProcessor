@@ -90,9 +90,14 @@ class DBCredentials implements JsonSerializable
             $this->prefix = '';
         }
 
-        $this->setDSN();
+        if (isset($config['options'])) {
+            $this->options = $config['options'];
+        }
+        else {
+            $this->setOptions();
+        }
 
-        $this->setOptions();
+        $this->setDSN();
     }
 
     private function setDSN()

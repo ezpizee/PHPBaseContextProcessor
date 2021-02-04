@@ -2,6 +2,7 @@
 
 namespace Ezpizee\ContextProcessor;
 
+use Ezpizee\ContextProcessor\Slim\DBOContainer;
 use Ezpizee\Utils\ListModel;
 use Ezpizee\Utils\Logger;
 use Ezpizee\Utils\PHPAuth;
@@ -14,6 +15,23 @@ use RuntimeException;
 
 abstract class Base
 {
+    /**
+     * @var DBO
+     */
+    protected $connection;
+    /**
+     * The connection to the ezpz_user database
+     *
+     * @var DBO
+     */
+    protected $systemConnection;
+    /**
+     * Used for setting data to send to microservice messaging service
+     *
+     * @var array
+     */
+    protected $dataForMessagingService = [];
+
     private static $serviceName = '';
 
     protected $context = [
@@ -35,9 +53,36 @@ abstract class Base
 
     protected $isAllRequiredFieldsValid = false;
 
-    public function __construct()
+    protected $timestampNow = 0;
+    protected $hasFormSubmission = false;
+
+    public function __construct() {}
+
+    /**
+     * @param DBOContainer $em
+     */
+    protected final function setEntityManager(DBOContainer $em)
+    : void
     {
+        $this->timestampNow = strtotime('now');
+        $this->systemConnection = $em->getConnection();
+        $this->connection = $this->systemConnection;
+        $this->hasFormSubmission = $this->request->method()==='POST' && !empty($this->request->getRequestParamsAsArray());
     }
+
+    /**
+     * Expose db connection
+     *
+     * @return DBO
+     */
+    public function getConnection(): DBO {return $this->connection;}
+
+    /**
+     * Expose the connection to the ezpz_user database
+     *
+     * @return DBO
+     */
+    public function getSystemConnection(): DBO {return $this->systemConnection;}
 
     public static final function getServiceName()
     : string
@@ -363,4 +408,35 @@ abstract class Base
         }
         return $data2;
     }
+
+    public final function closeDBConnection()
+    : void
+    {
+        if ($this->connection instanceof DBO && $this->connection->isConnected()) {
+            $this->connection->closeConnection();
+        }
+    }
+
+    protected final function triggerMessagingServiceProducer()
+    : void
+    {
+        if (defined('FIREBASE_INTEGRATED') && FIREBASE_INTEGRATED &&
+            method_exists($this, 'sendFirebaseTopic')) {
+            $this->sendFirebaseTopic();
+        }
+        else if (defined('KAFKA_INTEGRATED') && KAFKA_INTEGRATED &&
+            method_exists($this, 'sendKafkaTopic')) {
+            $this->sendKafkaTopic();
+        }
+        else if (defined('RABBITMQ_INTEGRATED') && RABBITMQ_INTEGRATED &&
+            method_exists($this, 'sendRabbitMQTopic')) {
+            $this->sendRabbitMQTopic();
+        }
+    }
+
+    protected function sendFirebaseTopic(): void {}
+
+    protected function sendKafkaTopic(): void {}
+
+    protected function sendRabbitMQTopic(): void {}
 }

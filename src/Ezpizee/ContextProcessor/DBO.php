@@ -2,7 +2,7 @@
 
 namespace Ezpizee\ContextProcessor;
 
-use Ezpizee\Utils\Logger;
+use Ezpizee\Utils\StringUtil;
 use JsonSerializable;
 use PDO;
 use PDOException;
@@ -11,17 +11,16 @@ use RuntimeException;
 
 class DBO implements JsonSerializable
 {
+    private static $connections = [];
     /**
      * @var PDO
      */
-    private $conn;
-
+    private $conn = null;
     /**
      * @var DBCredentials
      */
-    private $config;
-
-    private $stm;
+    private $config = null;
+    private $stm = '';
     private $stopWhenError = false;
     private $keepResults = false;
     private $errors = [];
@@ -45,12 +44,18 @@ class DBO implements JsonSerializable
     : void
     {
         try {
-            $this->conn = new PDO(
-                $this->config->dsn,
-                $this->config->username,
-                $this->config->password,
-                $this->config->options
-            );
+            if (isset(self::$connections[$this->config->dsn])) {
+                $this->conn = self::$connections[$this->config->dsn];
+            }
+            else {
+                $this->conn = new PDO(
+                    $this->config->dsn,
+                    $this->config->username,
+                    $this->config->password,
+                    $this->config->options
+                );
+                self::$connections[$this->config->dsn] = $this->conn;
+            }
         }
         catch (PDOException $e) {
             throw new RuntimeException("Failed to connect to MySQL: " . $e->getMessage() . ' (' . $this->config . ')');
@@ -74,6 +79,9 @@ class DBO implements JsonSerializable
     {
         if ($this->isConnected()) {
             $this->conn = null;
+            if (isset(self::$connections[$this->config->dsn])) {
+                unset(self::$connections[$this->config->dsn]);
+            }
         }
     }
 
@@ -85,11 +93,9 @@ class DBO implements JsonSerializable
 
     public function lastInsertId() { return $this->isConnected() ? $this->conn->lastInsertId() : 0; }
 
-    public function exec(string $query = '')
-    : bool
-    {
-        return $this->execute($query);
-    }
+    public function exec(string $query = ''): bool {return $this->execute($query);}
+
+    public function executeQuery(string $query): bool {return $this->execute($query);}
 
     public function execute(string $query = '')
     : bool
@@ -99,7 +105,7 @@ class DBO implements JsonSerializable
         }
         if ($this->stm) {
             $this->reset();
-            $arr = explode("\n", $this->stm);
+            $arr = explode(";\n", $this->stm);
             if (sizeof($arr) > 1) {
                 $query = '';
                 foreach ($arr as $line) {
@@ -153,6 +159,7 @@ class DBO implements JsonSerializable
 
     private function query(string $query, bool $fetchResult = false, bool $isAssoc = false, bool $stopWhenError = false)
     {
+        $query = StringUtil::removeWhitespace($query);
         $this->queries[] = $query;
 
         if ($fetchResult) {
@@ -204,6 +211,13 @@ class DBO implements JsonSerializable
     {
         $query = 'DESCRIBE ' . $this->quoteName($tableName);
         return (new TableColumns($this->loadAssocList($query)));
+    }
+
+    public final function alterStorageEngine(string $tb, string $engine)
+    : void
+    {
+        $query = 'ALTER'.' TABLE '.$tb.' ENGINE = '.$engine;
+        $this->exec($query);
     }
 
     public function quoteName(string $str)
@@ -277,7 +291,7 @@ class DBO implements JsonSerializable
         }
         if ($this->stm) {
             $this->reset();
-            $arr = explode("\n", $this->stm);
+            $arr = explode(";\n", $this->stm);
             if (sizeof($arr) > 1) {
                 $query = '';
                 foreach ($arr as $line) {
@@ -310,6 +324,18 @@ class DBO implements JsonSerializable
             throw new RuntimeException(DBO::class . '.loadAssoc: query statement is empty', 500);
         }
     }
+
+    public function fetchAssoc(string $query): array {return $this->loadAssoc($query);}
+
+    public function fetchRow(string $query): array {return $this->loadAssoc($query);}
+
+    public function fetchAssocList(string $query): array {return $this->loadAssocList($query);}
+
+    public function fetchRows(string $query): array {return $this->loadAssocList($query);}
+
+    public function fetchAssociative(string $query): array {return $this->loadAssoc($query);}
+
+    public function fetchAllAssociative(string $query): array {return $this->loadAssocList($query);}
 
     /**
      * @return DBCredentials
