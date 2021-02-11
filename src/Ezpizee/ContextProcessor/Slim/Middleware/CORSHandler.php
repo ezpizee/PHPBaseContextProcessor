@@ -45,7 +45,7 @@ class CORSHandler
             }
         }
 
-        if ($passCORS && $res instanceof Response) {
+        if ($passCORS && $res instanceof Response && is_callable($next)) {
             try {
                 $res = $next($req, $res);
             }
