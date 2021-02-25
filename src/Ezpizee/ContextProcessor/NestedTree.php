@@ -2,6 +2,8 @@
 
 namespace Ezpizee\ContextProcessor;
 
+use Ezpizee\Utils\PathUtil;
+
 final class NestedTree
 {
     /**
@@ -277,7 +279,6 @@ final class NestedTree
                                 else {
                                     return $this->storeAddNodeQueryAsArray('after', $rows[$i-1]['id']);
                                 }
-                                break;
                             }
                         }
                     }
