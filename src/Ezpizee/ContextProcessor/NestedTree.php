@@ -64,7 +64,7 @@ final class NestedTree
         $queries[] = 'DELETE '.'FROM ' . $this->table . ' WHERE lft BETWEEN @myLeft AND @myRight;';
         $queries[] = 'UPDATE ' . $this->table . ' SET rgt = rgt - @myWidth WHERE rgt > @myRight;';
         $queries[] = 'UPDATE ' . $this->table . ' SET lft = lft - @myWidth WHERE lft > @myRight;';
-        $queries[] = 'UNLOCK TABLES;';
+        $queries[] = 'UNLOCK TABLES';
         $this->dbo->exec(implode("\n", $queries));
         return true;
     }
@@ -433,7 +433,7 @@ final class NestedTree
                 ' WHERE id=' . $this->editId . ';';
 
             // unlock
-            $queries[] = 'UNLOCK TABLES;';
+            $queries[] = 'UNLOCK TABLES';
         }
 
         return $queries;
@@ -482,7 +482,7 @@ final class NestedTree
             ' WHERE id='.$this->editId . ';';
 
         // unlock
-        $queries[] = 'UNLOCK TABLES;';
+        $queries[] = 'UNLOCK TABLES';
 
         return $queries;
     }
@@ -518,7 +518,7 @@ final class NestedTree
             (is_array($this->insertFieldList) ? implode(',', $this->insertFieldList) : $this->insertFieldList) .
             ') VALUES(' . implode(',', $this->insertValueList) . ');';
 
-        $queries[] = 'UNLOCK TABLES;';
+        $queries[] = 'UNLOCK TABLES';
 
         return $queries;
     }

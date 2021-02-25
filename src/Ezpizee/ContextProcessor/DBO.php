@@ -2,6 +2,7 @@
 
 namespace Ezpizee\ContextProcessor;
 
+use Ezpizee\Utils\Logger;
 use Ezpizee\Utils\StringUtil;
 use JsonSerializable;
 use PDO;
@@ -110,10 +111,13 @@ class DBO implements JsonSerializable
                 $query = '';
                 foreach ($arr as $line) {
                     // Skip it if it's a comment
-                    if (substr($line, 0, 2) === '--' || trim($line) === '') {
-                        continue;
-                    }
-                    if (strlen(trim($line)) > 3 && substr(trim($line), 0, 3) === '/*!' && substr(trim($line), -3, 3) === '*/;') {
+                    if (
+                        (substr($line, 0, 2) === '--' || trim($line) === '') ||
+                        (
+                            strlen(trim($line)) > 3 && substr(trim($line), 0, 3) === '/*!' &&
+                            substr(trim($line), -3, 3) === '*/;'
+                        )
+                    ) {
                         continue;
                     }
 
@@ -121,11 +125,15 @@ class DBO implements JsonSerializable
                     $query .= $line;
 
                     // If it has a semicolon at the end, it's the end of the query
-                    if (substr(trim($line), -1, 1) == ';') {
+                    if (substr(trim($line), -1, 1) === ';') {
                         $this->query(substr($query, 0, strlen($query) - 1), false, false);
-                        // Reset temp variable to empty
-                        $query = '';
                     }
+                    else if ($query) {
+                        $this->query($query, false, false);
+                    }
+
+                    // Reset temp variable to empty
+                    $query = '';
                 }
             }
             else {
