@@ -127,13 +127,14 @@ class DBO implements JsonSerializable
                     // If it has a semicolon at the end, it's the end of the query
                     if (substr(trim($line), -1, 1) === ';') {
                         $this->query(substr($query, 0, strlen($query) - 1), false, false);
+                        // Reset temp variable to empty
+                        $query = '';
                     }
-                    else if ($query) {
+                    else if (trim($query)) {
                         $this->query($query, false, false);
+                        // Reset temp variable to empty
+                        $query = '';
                     }
-
-                    // Reset temp variable to empty
-                    $query = '';
                 }
             }
             else {
