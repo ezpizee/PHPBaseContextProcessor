@@ -352,6 +352,9 @@ abstract class Base
         else if (isset($_GET[$key])) {
             return $_GET[$key];
         }
+        else if (isset($_POST[$key])) {
+            return $_POST[$key];
+        }
         return null;
     }
 
@@ -364,7 +367,7 @@ abstract class Base
         else if (!empty($this->requestData) && isset($this->requestData[$key])) {
             return true;
         }
-        else if (isset($_GET[$key])) {
+        else if (isset($_GET[$key]) || isset($_POST[$key])) {
             return true;
         }
         return false;
