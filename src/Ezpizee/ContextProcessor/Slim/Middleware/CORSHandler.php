@@ -15,11 +15,11 @@ use Slim\Http\Response;
 
 class CORSHandler
 {
-    public $endpointPath = '';
+    public $endPointPath = '';
 
     public function __construct(string $endpointPath)
     {
-        $this->endpointPath = $endpointPath;
+        $this->endPointPath = $endpointPath;
     }
 
     public function __invoke(Request $req, Response $res, App $next): Response
@@ -37,7 +37,7 @@ class CORSHandler
             $headers = $request->getHeaderKeysAsString();
             $merchantPublicKey = strip_tags($req->getHeaderLine('merchant_public_key'));
             if (empty($merchantPublicKey)) {
-                RequestEndpointValidator::validate($uri, $this->endpointPath);
+                RequestEndpointValidator::validate($uri, $this->endPointPath);
                 $merchantPublicKey = RequestEndpointValidator::getUriParam('public_key');
             }
             if (!empty($merchantPublicKey)) {
@@ -70,11 +70,12 @@ class CORSHandler
     {
         $passCORS = false;
         if (UUID::isValid($merchantPublicKey)) {
+            $conn = $em->getConnection();
             $sql = 'SELECT user_id'.' 
                     FROM allowed_hosts 
-                    WHERE host_md5="'.md5(str_replace(['https://','http://'], '', $origin)).'" 
-                    AND public_key="'.$merchantPublicKey.'"';
-            $row = $em->getConnection()->loadAssoc($sql);
+                    WHERE host_md5='.$conn->quote(md5(str_replace(['https://','http://','/'], '', $origin))).'
+                    AND public_key='.$conn->quote($merchantPublicKey);
+            $row = $conn->loadAssoc($sql);
             if (!empty($row)) {
                 $passCORS = true;
             }
