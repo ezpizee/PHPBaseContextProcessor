@@ -96,13 +96,24 @@ abstract class Base
         $method = !empty($this->request) ? $this->request->method() : strtoupper($_SERVER['REQUEST_METHOD']);
 
         if (in_array($method, $this->allowedMethods())) {
-            $invalidAccessToken = false;
-            if ($this->requiredAccessToken()) {
-                $invalidAccessToken = !$this->isValidAccessToken();
-            }
-            if (!$invalidAccessToken) {
-                if ($this->validRequiredParams()) {
+            
+            // 1. check if required fields are valid
+            if ($this->validRequiredParams()) {
+
+                $invalidAccessToken = false;
+
+                // 2. check if access token is required
+                if ($this->requiredAccessToken()) {
+                    $invalidAccessToken = !$this->isValidAccessToken();
+                }
+
+                // 3. if access token is not required or if required & valid toke was provided
+                if (!$invalidAccessToken) {
+
+                    // 4. if system user is required
                     if ($this->isSystemUserOnly()) {
+
+                        // 5. if system user is required & invalid
                         if (!$this->isSystemUser(PHPAuth::getUsername(), PHPAuth::getPassword())) {
                             $this->context['status'] = ResponseCodes::STATUS_ERROR;
                             $this->context['code'] = ResponseCodes::CODE_ERROR_ITEM_NOT_FOUND;
@@ -121,14 +132,14 @@ abstract class Base
                 }
                 else {
                     $this->context['status'] = ResponseCodes::STATUS_ERROR;
-                    $this->context['code'] = ResponseCodes::CODE_ERROR_INVALID_FIELD;
-                    $this->context['message'] = ResponseCodes::MESSAGE_ERROR_INVALID_FIELD;
+                    $this->context['code'] = ResponseCodes::CODE_ERROR_INVALID_TOKEN;
+                    $this->context['message'] = ResponseCodes::MESSAGE_ERROR_INVALID_TOKEN;
                 }
             }
             else {
                 $this->context['status'] = ResponseCodes::STATUS_ERROR;
-                $this->context['code'] = ResponseCodes::CODE_ERROR_INVALID_TOKEN;
-                $this->context['message'] = ResponseCodes::MESSAGE_ERROR_INVALID_TOKEN;
+                $this->context['code'] = ResponseCodes::CODE_ERROR_INVALID_FIELD;
+                $this->context['message'] = ResponseCodes::MESSAGE_ERROR_INVALID_FIELD;
             }
         }
         else {
