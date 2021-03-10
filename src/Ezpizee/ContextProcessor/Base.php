@@ -96,7 +96,7 @@ abstract class Base
         $method = !empty($this->request) ? $this->request->method() : strtoupper($_SERVER['REQUEST_METHOD']);
 
         if (in_array($method, $this->allowedMethods())) {
-            
+
             // 1. check if required fields are valid
             if ($this->validRequiredParams()) {
 
