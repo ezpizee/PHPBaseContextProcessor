@@ -26,7 +26,7 @@ class CORSHandler
     {
         $passCORS = false;
         $em = $em = $next->getContainer()->get(DBOContainer::class);
-        $origin = strip_tags($req->getHeaderLine('Origin'));
+        $origin = strip_tags($req->getHeaderLine('Origin'));;
         $method = 'GET,POST,DELETE,PUT,PATCH,OPTIONS';
         $headers = '';
         $request = new EzRequest(['request'=>$req]);
