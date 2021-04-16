@@ -26,12 +26,18 @@ class CORSHandler
     {
         $passCORS = false;
         $em = $em = $next->getContainer()->get(DBOContainer::class);
-        $origin = strip_tags($req->getHeaderLine('Origin'));;
+        $referer = $req->getHeaderLine('Referer');
+        $requestHeaders = explode(',', $req->getHeaderLine('Access-Control-Request-Headers'));
+        $origin = strip_tags($req->getHeaderLine('Origin'));
         $method = 'GET,POST,DELETE,PUT,PATCH,OPTIONS';
         $headers = '';
         $request = new EzRequest(['request'=>$req]);
+        $isAjax = $request->isAjax() ||
+            $req->getHeaderLine('X-Requested-With') === 'EzpizeeHttpClient' ||
+            in_array('x-requested-with', $requestHeaders);
 
-        if ($origin && $req->hasHeader('Referer') &&
+        if ($isAjax && $origin && $referer &&
+            (strpos($referer, $origin) !== false || $referer === $origin) &&
             strpos($origin, $_SERVER['HTTP_HOST']) === false) {
             $uri = strip_tags($req->getUri()->getPath());
             $headers = $request->getHeaderKeysAsString();
