@@ -84,15 +84,13 @@ abstract class Base
      */
     public function getSystemConnection(): DBO {return $this->systemConnection;}
 
-    public static final function getServiceName()
-    : string
-    {
-        return self::$serviceName;
-    }
+    public static final function getServiceName(): string{return self::$serviceName;}
 
     public final function getContext()
     : array
     {
+        $this->preProcessContext();
+
         $method = !empty($this->request) ? $this->request->method() : strtoupper($_SERVER['REQUEST_METHOD']);
 
         if (in_array($method, $this->allowedMethods())) {
@@ -147,14 +145,13 @@ abstract class Base
             $this->context['message'] = ResponseCodes::CODE_ERROR_INVALID_METHOD;
             $this->context['message'] = ResponseCodes::MESSAGE_ERROR_INVALID_METHOD;
         }
+
+        $this->postProcessContext();
+
         return $this->context;
     }
 
-    public final function setContext(array $context)
-    : void
-    {
-        $this->context = $context;
-    }
+    public final function setContext(array $context): void{$this->context = $context;}
 
     abstract protected function allowedMethods()
     : array;
@@ -174,20 +171,15 @@ abstract class Base
     abstract protected function isSystemUser(string $user, string $pwd)
     : bool;
 
-    public final function setContextDebug($debug)
-    : void
-    {
-        $this->context['debug'] = $debug;
-    }
+    public final function setContextDebug($debug): void {$this->context['debug'] = $debug;}
 
-    abstract public function processContext()
-    : void;
+    protected function preProcessContext(): void {}
 
-    public final function setServiceName(string $serviceName)
-    : void
-    {
-        self::$serviceName = $serviceName;
-    }
+    abstract public function processContext(): void;
+
+    protected function postProcessContext(): void {}
+
+    public final function setServiceName(string $serviceName): void{self::$serviceName = $serviceName;}
 
     public final function setRequest(Request $request)
     {
@@ -195,35 +187,15 @@ abstract class Base
         $this->requestData = $request->getRequestParamsAsArray();
     }
 
-    public final function setRequestData(array $data)
-    : void
-    {
-        $this->requestData = $data;
-    }
+    public final function setRequestData(array $data): void{$this->requestData = $data;}
 
-    public final function setContextData(array $data)
-    : void
-    {
-        $this->context['data'] = $data;
-    }
+    public final function setContextData(array $data): void{$this->context['data'] = $data;}
 
-    public final function setContextStatus(string $status)
-    : void
-    {
-        $this->context['status'] = $status;
-    }
+    public final function setContextStatus(string $status): void{$this->context['status'] = $status;}
 
-    public final function setContextCode(int $code)
-    : void
-    {
-        $this->context['code'] = $code;
-    }
+    public final function setContextCode(int $code): void{$this->context['code'] = $code;}
 
-    public final function setContextMessage(string $msg)
-    : void
-    {
-        $this->context['message'] = $msg;
-    }
+    public final function setContextMessage(string $msg): void{$this->context['message'] = $msg;}
 
     public final function getContextCode()
     : int
@@ -231,11 +203,7 @@ abstract class Base
         return is_string($this->context['code']) ? (int)$this->context['code'] : $this->context['code'];
     }
 
-    public final function getContextMessage()
-    : string
-    {
-        return $this->context['message'];
-    }
+    public final function getContextMessage(): string{return $this->context['message'];}
 
     public final function getContextData()
     : array
@@ -260,11 +228,7 @@ abstract class Base
         Logger::{$type}($msg);
     }
 
-    public final function testDisplay($val, bool $isJSON = false)
-    : void
-    {
-        Logger::testDisplay($val, $isJSON);
-    }
+    public final function testDisplay($val, bool $isJSON = false): void{Logger::testDisplay($val, $isJSON);}
 
     protected function subRequest(
         string $method,
@@ -284,11 +248,7 @@ abstract class Base
         return new Response($method, $path, json_encode($context));
     }
 
-    protected final function getUriParam($key)
-    : string
-    {
-        return RequestEndpointValidator::getUriParam($key);
-    }
+    protected final function getUriParam($key): string{return RequestEndpointValidator::getUriParam($key);}
 
     /**
      * Allow child class to invoke default fields validator

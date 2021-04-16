@@ -27,6 +27,7 @@ class DBO implements JsonSerializable
     private $errors = [];
     private $results = [];
     private $queries = [];
+    private $isDebug = false;
 
     public function __construct(DBCredentials $config, bool $stopWhenError = false, bool $keepResults = false)
     {
@@ -44,6 +45,10 @@ class DBO implements JsonSerializable
     private function connect()
     : void
     {
+        if (defined('DEBUG') && DEBUG &&
+            defined('EZPIZEE_STACK_SQL_STM') && EZPIZEE_STACK_SQL_STM) {
+            $this->setIsDebug(true);
+        }
         try {
             if (isset(self::$connections[$this->config->dsn])) {
                 $this->conn = self::$connections[$this->config->dsn];
@@ -63,17 +68,13 @@ class DBO implements JsonSerializable
         }
     }
 
-    public function getErrors()
-    : array
-    {
-        return $this->errors;
-    }
+    public function isConnected(): bool {return $this->conn instanceof PDO;}
 
-    public function getDebugQueries()
-    : array
-    {
-        return $this->queries;
-    }
+    public function setIsDebug(bool $b): void {$this->isDebug = $b;}
+
+    public function getErrors(): array {return $this->errors;}
+
+    public function getDebugQueries(): array {return $this->queries;}
 
     public function closeConnection()
     : void
@@ -84,12 +85,6 @@ class DBO implements JsonSerializable
                 unset(self::$connections[$this->config->dsn]);
             }
         }
-    }
-
-    public function isConnected()
-    : bool
-    {
-        return $this->conn instanceof PDO;
     }
 
     public function lastInsertId() { return $this->isConnected() ? $this->conn->lastInsertId() : 0; }
@@ -169,7 +164,9 @@ class DBO implements JsonSerializable
     private function query(string $query, bool $fetchResult = false, bool $isAssoc = false, bool $stopWhenError = false)
     {
         $query = StringUtil::removeWhitespace($query);
-        $this->queries[] = $query;
+        if ($this->isDebug) {
+            $this->queries[] = $query;
+        }
 
         if ($fetchResult) {
             if ($isAssoc) {
@@ -345,6 +342,8 @@ class DBO implements JsonSerializable
     public function fetchAssociative(string $query): array {return $this->loadAssoc($query);}
 
     public function fetchAllAssociative(string $query): array {return $this->loadAssocList($query);}
+
+    public function getConnections(): array {return array_keys(self::$connections);}
 
     /**
      * @return DBCredentials
