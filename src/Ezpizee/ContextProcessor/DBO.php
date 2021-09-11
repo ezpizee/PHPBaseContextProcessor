@@ -28,6 +28,7 @@ class DBO implements JsonSerializable
     private $results = [];
     private $queries = [];
     private $isDebug = false;
+    private $cachedResults = [];
 
     public function __construct(DBCredentials $config, bool $stopWhenError = false, bool $keepResults = false)
     {
@@ -164,51 +165,53 @@ class DBO implements JsonSerializable
     private function query(string $query, bool $fetchResult = false, bool $isAssoc = false, bool $stopWhenError = false)
     {
         $query = StringUtil::removeWhitespace($query);
-        if ($this->isDebug) {
-            $this->queries[] = $query;
-        }
+        $md5Query = md5($query);
 
-        if ($fetchResult) {
-            if ($isAssoc) {
-                $result = $this->conn->query($query);
-                if ($result) {
-                    $row = $result->fetch(PDO::FETCH_ASSOC);
-                    if (!empty($row)) {
-                        $this->results[] = $row;
-                    }
-                }
-                else if (!empty($this->conn->errorInfo())) {
-                    $this->errors[] = $this->conn->errorInfo();
-                }
+        if (isset($this->cachedResults[$md5Query])) {
+            $this->results = $this->cachedResults[$md5Query];
+        }
+        else {
+            if ($this->isDebug) {
+                $this->queries[] = $query;
             }
-            else {
-                $result = $this->conn->query($query);
-                if ($result) {
-                    $rows = $result->fetchAll(PDO::FETCH_ASSOC);
-                    foreach ($rows as $row) {
+
+            if ($fetchResult) {
+                if ($isAssoc) {
+                    $result = $this->conn->query($query);
+                    if ($result) {
+                        $row = $result->fetch(PDO::FETCH_ASSOC);
                         if (!empty($row)) {
                             $this->results[] = $row;
                         }
+                    } else if (!empty($this->conn->errorInfo())) {
+                        $this->errors[] = $this->conn->errorInfo();
+                    }
+                } else {
+                    $result = $this->conn->query($query);
+                    if ($result) {
+                        $rows = $result->fetchAll(PDO::FETCH_ASSOC);
+                        foreach ($rows as $row) {
+                            if (!empty($row)) {
+                                $this->results[] = $row;
+                            }
+                        }
+                    } else if (!empty($this->conn->errorInfo())) {
+                        $this->errors[] = $this->conn->errorInfo();
                     }
                 }
-                else if (!empty($this->conn->errorInfo())) {
-                    $this->errors[] = $this->conn->errorInfo();
+            } else {
+                $result = $this->conn->query($query);
+                if (is_bool($result) && !$result && !empty($this->conn->errorInfo())) {
+                    if ($this->stopWhenError || $stopWhenError) {
+                        throw new RuntimeException(DBO::class . ".query: " . json_encode($this->conn->errorInfo()) . "\n");
+                    } else {
+                        $this->errors[] = $this->conn->errorInfo();
+                    }
+                } else if ($result instanceof PDOStatement && $this->keepResults) {
+                    $this->results[] = $result->fetchAll(PDO::FETCH_ASSOC);
                 }
             }
-        }
-        else {
-            $result = $this->conn->query($query);
-            if (is_bool($result) && !$result && !empty($this->conn->errorInfo())) {
-                if ($this->stopWhenError || $stopWhenError) {
-                    throw new RuntimeException(DBO::class . ".query: " . json_encode($this->conn->errorInfo()) . "\n");
-                }
-                else {
-                    $this->errors[] = $this->conn->errorInfo();
-                }
-            }
-            else if ($result instanceof PDOStatement && $this->keepResults) {
-                $this->results[] = $result->fetchAll(PDO::FETCH_ASSOC);
-            }
+            $this->cachedResults[$md5Query] = $this->results;
         }
     }
 
