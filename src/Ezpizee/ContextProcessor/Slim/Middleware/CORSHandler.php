@@ -25,11 +25,11 @@ class CORSHandler
     public function __invoke(Request $req, Response $res, App $next): Response
     {
         $passCORS = false;
-        $em = $em = $next->getContainer()->get(DBOContainer::class);
+        $em = $next->getContainer()->get(DBOContainer::class);
         $referer = $req->getHeaderLine('Referer');
         $requestHeaders = explode(',', $req->getHeaderLine('Access-Control-Request-Headers'));
         $origin = strip_tags($req->getHeaderLine('Origin'));
-        $method = 'GET,POST,DELETE,PUT,PATCH,OPTIONS';
+        $method = 'OPTIONS,GET,POST,PUT,DELETE';
         $headers = '';
         $request = new EzRequest(['request'=>$req]);
         $isAjax = $request->isAjax() ||
