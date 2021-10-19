@@ -76,13 +76,14 @@ class CORSHandler
     {
         $passCORS = false;
         if (UUID::isValid($merchantPublicKey)) {
+            $origin = str_replace(['https://','http://','/'], '', $origin);
             $conn = $em->getConnection();
-            $sql = 'SELECT user_id'.' 
+            $sql = 'SELECT host'.' 
                     FROM allowed_hosts 
-                    WHERE host_md5='.$conn->quote(md5(str_replace(['https://','http://','/'], '', $origin))).'
+                    WHERE host_md5='.$conn->quote(md5($origin)).'
                     AND public_key='.$conn->quote($merchantPublicKey);
             $row = $conn->loadAssoc($sql);
-            if (!empty($row)) {
+            if (!empty($row) && $row['host'] === $origin) {
                 $passCORS = true;
             }
         }
