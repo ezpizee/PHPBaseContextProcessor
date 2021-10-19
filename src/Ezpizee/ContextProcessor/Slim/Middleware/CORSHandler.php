@@ -83,7 +83,6 @@ class CORSHandler
                     WHERE host_md5='.$conn->quote(md5($origin)).'
                     AND public_key='.$conn->quote($publicKey);
             $row = $conn->loadAssoc($sql);
-            Logger::debug($row);
             if (!empty($row) && $row['host'] === $origin) {
                 $passCORS = true;
             }
