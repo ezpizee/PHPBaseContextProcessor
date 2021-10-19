@@ -72,17 +72,18 @@ class CORSHandler
         return $res;
     }
 
-    public function passCOSR(DBOContainer $em, string $merchantPublicKey, string $origin): bool
+    public function passCOSR(DBOContainer $em, string $publicKey, string $origin): bool
     {
         $passCORS = false;
-        if (UUID::isValid($merchantPublicKey)) {
+        if (UUID::isValid($publicKey)) {
             $origin = str_replace(['https://','http://','/'], '', $origin);
             $conn = $em->getConnection();
             $sql = 'SELECT host'.' 
                     FROM allowed_hosts 
                     WHERE host_md5='.$conn->quote(md5($origin)).'
-                    AND public_key='.$conn->quote($merchantPublicKey);
+                    AND public_key='.$conn->quote($publicKey);
             $row = $conn->loadAssoc($sql);
+            Logger::debug($row);
             if (!empty($row) && $row['host'] === $origin) {
                 $passCORS = true;
             }
