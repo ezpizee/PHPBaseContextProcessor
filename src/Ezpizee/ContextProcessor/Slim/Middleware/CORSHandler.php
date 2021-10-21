@@ -77,6 +77,8 @@ class CORSHandler
             in_array('x-requested-with', $requestHeaders);
     }
 
+    public function isPassCORS(): bool {return $this->passCORS;}
+
     private function passCOSR(DBOContainer $em, string $publicKey, string $origin): void
     {
         if (UUID::isValid($publicKey)) {
