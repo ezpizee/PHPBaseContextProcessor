@@ -16,6 +16,7 @@ use Slim\Http\Response;
 class CORSHandler
 {
     public $endPointPath = '';
+    private $passCORS = false;
 
     public function __construct(string $endpointPath)
     {
@@ -24,19 +25,30 @@ class CORSHandler
 
     public function __invoke(Request $req, Response $res, App $next): Response
     {
-        $passCORS = false;
-        $em = $next->getContainer()->get(DBOContainer::class);
-        $referer = $req->getHeaderLine('Referer');
-        $requestHeaders = explode(',', $req->getHeaderLine('Access-Control-Request-Headers'));
-        $origin = strip_tags($req->getHeaderLine('Origin'));
-        $method = 'OPTIONS,GET,POST,PUT,DELETE';
-        $headers = '';
-        $request = new EzRequest(['request'=>$req]);
-        $isAjax = $request->isAjax() ||
-            $req->getHeaderLine('X-Requested-With') === 'EzpizeeHttpClient' ||
-            in_array('x-requested-with', $requestHeaders);
+        $this->validate($req, $next);
 
-        if ($isAjax && $origin && $referer &&
+        if ($this->passCORS) {
+            try {
+                $res = $next($req, $res);
+            }
+            catch (Exception $e) {
+                Logger::error($e->getMessage());
+                throw new RuntimeException($e->getMessage(), 422);
+            }
+        }
+
+        return $res;
+    }
+
+    public function validate(Request $req, App $app): void
+    {
+        $em = $app->getContainer()->get(DBOContainer::class);
+        $headers = '';
+        $referer = $req->getHeaderLine('Referer');
+        $origin = strip_tags($req->getHeaderLine('Origin'));
+        $request = new EzRequest(['request'=>$req]);
+
+        if ($this->isAjaxRequest($req, $request) && $origin && $referer &&
             (strpos($referer, $origin) !== false || $referer === $origin) &&
             strpos($origin, $_SERVER['HTTP_HOST']) === false) {
             $uri = strip_tags($req->getUri()->getPath());
@@ -47,34 +59,26 @@ class CORSHandler
                 $merchantPublicKey = RequestEndpointValidator::getUriParam('public_key');
             }
             if (!empty($merchantPublicKey)) {
-                $passCORS = $this->passCOSR($em, $merchantPublicKey, $origin);
+                $this->passCOSR($em, $merchantPublicKey, $origin);
             }
         }
 
-        if ($passCORS && $res instanceof Response && is_callable($next)) {
-            try {
-                $res = $next($req, $res);
-            }
-            catch (Exception $e) {
-                Logger::error($e->getMessage());
-                throw new RuntimeException($e->getMessage(), 422);
-            }
-            /*
-            $res->withHeader('Access-Control-Allow-Origin', $origin)
-                ->withHeader('Access-Control-Allow-Headers', $headers)
-                ->withHeader('Access-Control-Allow-Methods', $method);
-            */
+        if ($this->passCORS && $headers) {
             header('Access-Control-Allow-Origin: '.$origin);
             header('Access-Control-Allow-Headers: '.$headers);
-            header('Access-Control-Allow-Methods: '.$method);
+            header('Access-Control-Allow-Methods: '.$req->getMethod());
         }
-
-        return $res;
     }
 
-    public function passCOSR(DBOContainer $em, string $publicKey, string $origin): bool
+    public function isAjaxRequest(Request $req, EzRequest $request): bool {
+        $requestHeaders = explode(',', $req->getHeaderLine('Access-Control-Request-Headers'));
+        return $request->isAjax() ||
+            $req->getHeaderLine('X-Requested-With') === 'EzpizeeHttpClient' ||
+            in_array('x-requested-with', $requestHeaders);
+    }
+
+    private function passCOSR(DBOContainer $em, string $publicKey, string $origin): void
     {
-        $passCORS = false;
         if (UUID::isValid($publicKey)) {
             $origin = str_replace(['https://','http://','/'], '', $origin);
             $conn = $em->getConnection();
@@ -84,9 +88,8 @@ class CORSHandler
                     AND public_key='.$conn->quote($publicKey);
             $row = $conn->loadAssoc($sql);
             if (!empty($row) && $row['host'] === $origin) {
-                $passCORS = true;
+                $this->passCORS = true;
             }
         }
-        return $passCORS;
     }
 }
