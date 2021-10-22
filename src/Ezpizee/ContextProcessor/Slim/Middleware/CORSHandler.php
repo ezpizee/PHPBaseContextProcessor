@@ -47,6 +47,7 @@ class CORSHandler
         $referer = $req->getHeaderLine('Referer');
         $origin = strip_tags($req->getHeaderLine('Origin'));
         $request = new EzRequest(['request'=>$req]);
+        $method = $req->getMethod();
 
         if ($this->isAjaxRequest($req, $request) && $origin && $referer &&
             (strpos($referer, $origin) !== false || $referer === $origin) &&
@@ -55,7 +56,7 @@ class CORSHandler
             $headers = $request->getHeaderKeysAsString();
             $merchantPublicKey = strip_tags($req->getHeaderLine('merchant_public_key'));
             if (empty($merchantPublicKey)) {
-                RequestEndpointValidator::validate($uri, $this->endPointPath);
+                RequestEndpointValidator::validate($uri, $this->endPointPath, $method==='OPTIONS' ? null : $method);
                 $merchantPublicKey = RequestEndpointValidator::getUriParam('public_key');
             }
             if (!empty($merchantPublicKey)) {
@@ -66,7 +67,7 @@ class CORSHandler
         if ($this->passCORS && $headers) {
             header('Access-Control-Allow-Origin: '.$origin);
             header('Access-Control-Allow-Headers: '.$headers);
-            header('Access-Control-Allow-Methods: '.$req->getMethod());
+            header('Access-Control-Allow-Methods: '.$method);
         }
     }
 
