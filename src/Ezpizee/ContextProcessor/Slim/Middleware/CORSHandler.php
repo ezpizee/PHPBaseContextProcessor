@@ -27,7 +27,7 @@ class CORSHandler
     {
         $this->validate($req, $next);
 
-        if ($this->passCORS) {
+        if ($this->passCORS && is_callable($next)) {
             try {
                 $res = $next($req, $res);
             }
