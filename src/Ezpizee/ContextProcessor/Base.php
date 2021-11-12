@@ -312,7 +312,7 @@ abstract class Base
         }
     }
 
-    private final function getRequestData(string $key)
+    private function getRequestData(string $key)
     {
         if (!empty($this->request)) {
             return $this->request->getRequestParam($key);
@@ -329,7 +329,7 @@ abstract class Base
         return null;
     }
 
-    private final function hasRequestData(string $key)
+    private function hasRequestData(string $key)
     : bool
     {
         if (!empty($this->request)) {
