@@ -2,7 +2,6 @@
 
 namespace Ezpizee\ContextProcessor;
 
-use Ezpizee\Utils\Logger;
 use Ezpizee\Utils\StringUtil;
 use JsonSerializable;
 use PDO;
@@ -281,7 +280,6 @@ class DBO implements JsonSerializable
     : bool
     {
         $dbExistStm = 'SELECT ' . 'SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME=' . $this->quote($dbName);
-        $row = null;
         $row = $this->loadAssoc($dbExistStm);
         return !empty($row) && is_array($row) && isset($row['SCHEMA_NAME']);
     }
