@@ -220,7 +220,7 @@ class QueryKeyValuePairs implements JsonSerializable
 
     public function getFields(): array {return $this->fields;}
     public function getValues(): array {return $this->values;}
-    public function getValue(string $key): string {return isset($this->values[$key]) ? $this->values[$key] : '';}
+    public function getValue(string $key, string $default=''): string {return isset($this->values[$key]) ? $this->values[$key] : $default;}
     public function getFieldsAsString(): string {return implode(',', $this->fields);}
     public function getValuesAsString(): string {return implode(',', $this->values);}
     public function hasValue(string $key): bool {return isset($this->values[$key]);}
