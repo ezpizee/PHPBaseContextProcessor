@@ -47,6 +47,11 @@ class CustomLoader
                 $part = $parts[0];
                 $file = self::$packages[$part] . EZPIZEE_DS. str_replace(self::$delimiter, EZPIZEE_DS, $class) . '.php';
             }
+            $file = str_replace(
+                EZPIZEE_DS.$part.EZPIZEE_DS.$part.EZPIZEE_DS,
+                EZPIZEE_DS.$part.EZPIZEE_DS,
+                $file
+            );
             $passed = isset(self::$objects[$part]);
             if (!empty($file) && $passed === false && file_exists($file)) {
                 self::$objects[$class] = true;
