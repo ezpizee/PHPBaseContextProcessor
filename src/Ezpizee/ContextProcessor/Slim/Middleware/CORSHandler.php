@@ -88,7 +88,7 @@ class CORSHandler
     {
         if (UUID::isValid($publicKey)) {
             $host = StringUtil::getHost($origin);
-            $uri = '/api/host/validate/'.$publicKey;
+            $uri = EZECO_AUTH_HOST.'/api/host/validate/'.$publicKey;
             $resp = UnirestClient::get($uri, [
                 'Ref-Host' => $host
             ]);
@@ -110,7 +110,7 @@ class CORSHandler
         }
         if (UUID::isValid($token)) {
             $host = StringUtil::getHost($origin);
-            $uri = '/api/csrf/validate/'.$token;
+            $uri = EZECO_AUTH_HOST.'/api/csrf/validate/'.$token;
             $resp = UnirestClient::get($uri, [
                 'Ref-Host' => $host,
                 'Request-Unique-Id' => $requestUniqueId
