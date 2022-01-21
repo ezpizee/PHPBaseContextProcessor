@@ -7,11 +7,13 @@ use Ezpizee\ContextProcessor\Slim\DBOContainer;
 use Ezpizee\Utils\Logger;
 use Ezpizee\Utils\Request as EzRequest;
 use Ezpizee\Utils\RequestEndpointValidator;
+use Ezpizee\Utils\StringUtil;
 use Ezpizee\Utils\UUID;
 use RuntimeException;
 use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
+use Unirest\Request as UnirestClient;
 
 class CORSHandler
 {
@@ -66,7 +68,7 @@ class CORSHandler
             }
         }
 
-        if ($allow || ($this->passCORS && $this->validCSRFToken($em, $token, $requestUniqueId, $method))) {
+        if ($allow || ($this->passCORS && $this->validCSRFToken($em, $token, $requestUniqueId, $method, $origin))) {
             header('Access-Control-Allow-Origin: '.$origin);
             header('Access-Control-Allow-Headers: '.$headers);
             header('Access-Control-Allow-Methods: '.$method);
@@ -85,31 +87,41 @@ class CORSHandler
     private function passCOSR(DBOContainer $em, string $publicKey, string $origin): void
     {
         if (UUID::isValid($publicKey)) {
-            $origin = str_replace(['https://','http://','/'], '', $origin);
-            $conn = $em->getConnection();
-            $sql = 'SELECT host'.'
-            FROM allowed_hosts
-            WHERE host_md5='.$conn->quote(md5($origin)).' AND public_key='.$conn->quote($publicKey);
-            $row = $conn->loadAssoc($sql);
-            if (!empty($row) && $row['host'] === $origin) {
-                $this->passCORS = true;
+            $host = StringUtil::getHost($origin);
+            $uri = '/api/host/validate/'.$publicKey;
+            $resp = UnirestClient::get($uri, [
+                'Ref-Host' => $host
+            ]);
+            if ($resp->code === 200 && $resp->raw_body) {
+                $respContent = json_decode($resp->raw_body, true);
+                if (is_array($respContent) &&
+                    isset($respContent['data']) &&
+                    isset($respContent['data'][$publicKey])) {
+                    $this->passCORS = $respContent['data'][$publicKey];
+                }
             }
         }
     }
 
-    private function validCSRFToken(DBOContainer $em, string $token, string $requestUniqueId, string $method): bool
+    private function validCSRFToken(DBOContainer $em, string $token, string $requestUniqueId, string $method, string $origin): bool
     {
         if ($method === 'OPTIONS') {
             return true;
         }
         if (UUID::isValid($token)) {
-            $conn = $em->getConnection();
-            $sql = 'SELECT token'.'
-            FROM csrf_tokens
-            WHERE request_unique_id='.$conn->quote($requestUniqueId).' AND token='.$conn->quote($token);
-            $row = $conn->loadAssoc($sql);
-            if (!empty($row) && $row['token'] === $token) {
-                return true;
+            $host = StringUtil::getHost($origin);
+            $uri = '/api/csrf/validate/'.$token;
+            $resp = UnirestClient::get($uri, [
+                'Ref-Host' => $host,
+                'Request-Unique-Id' => $requestUniqueId
+            ]);
+            if ($resp->code === 200 && $resp->raw_body) {
+                $respContent = json_decode($resp->raw_body, true);
+                if (is_array($respContent) &&
+                    isset($respContent['data']) &&
+                    isset($respContent['data'][$token])) {
+                    return true;
+                }
             }
         }
         return false;
