@@ -54,17 +54,21 @@ class DBO implements JsonSerializable
                 $this->conn = self::$connections[$this->config->dsn];
             }
             else {
-                $this->conn = new PDO(
-                    $this->config->dsn,
-                    $this->config->username,
-                    $this->config->password,
-                    $this->config->options
-                );
+                if ($this->config->driver === 'oracle_oci') {
+                    //phpinfo();die();
+                    $this->conn = oci_connect($this->config->username, $this->config->password, $this->config->dsn, $this->config->charset);
+                }
+                else {
+                    $this->conn = new PDO($this->config->dsn, $this->config->username, $this->config->password, $this->config->options);
+                }
                 self::$connections[$this->config->dsn] = $this->conn;
             }
         }
         catch (PDOException $e) {
-            throw new RuntimeException("Failed to connect to MySQL: " . $e->getMessage() . ' (' . $this->config . ')');
+            throw new RuntimeException(
+                "Failed to connect to db server (".$this->config->driver."): " . $e->getMessage() . ' (' . $this->config->dsn . ')',
+                500
+            );
         }
     }
 

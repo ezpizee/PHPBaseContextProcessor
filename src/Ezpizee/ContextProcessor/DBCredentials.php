@@ -16,6 +16,7 @@ class DBCredentials implements JsonSerializable
     public $password;
     public $dbName;
     public $prefix;
+    public $wallet_location;
     public $collate = 'utf8_unicode_ci';
     public $options = null;
 
@@ -80,6 +81,10 @@ class DBCredentials implements JsonSerializable
             $this->dbName = '';
         }
 
+        if (isset($config['wallet_location'])) {
+            $this->wallet_location = $config['wallet_location'];
+        }
+
         if (isset($config['prefix'])) {
             $this->prefix = $config['prefix'];
         }
@@ -105,10 +110,22 @@ class DBCredentials implements JsonSerializable
     {
         if ($this->driver && $this->host) {
             $this->fetchDriver();
-            $this->dsn = $this->driver . ':host=' . $this->host .
-                ($this->port ? ';port=' . $this->port : '') .
-                ($this->dbName ? ';dbname=' . $this->dbName : '') .
-                ($this->charset ? ';charset=' . $this->charset : '');
+            if ($this->driver === 'oracle_oci') {
+                //https://developer.oracle.com/php/
+                //http://pecl.php.net/package/oci8
+                //${host}:${port}/${db}?wallet_location=${oracleWalletPath}
+                //oci:dbname=//localhost:1521/mydb
+                $this->dsn = //'oci:dbname='.
+                    $this->host.':'.$this->port.'/'.$this->dbName
+                    .'?wallet_location='.$this->wallet_location
+                    .'';
+            }
+            else {
+                $this->dsn = $this->driver . ':host=' . $this->host .
+                    ($this->port ? ';port=' . $this->port : '') .
+                    ($this->dbName ? ';dbname=' . $this->dbName : '') .
+                    ($this->charset ? ';charset=' . $this->charset : '');
+            }
         }
     }
 
@@ -150,17 +167,18 @@ class DBCredentials implements JsonSerializable
     : array
     {
         return [
-            'dsn'      => $this->dsn,
-            'driver'   => $this->driver,
-            'host'     => $this->host,
-            'port'     => $this->port,
-            'charset'  => $this->charset,
-            'username' => $this->username,
-            'password' => $this->password,
-            'dbname'   => $this->dbName,
-            'prefix'   => $this->prefix,
-            'collate'  => $this->collate,
-            'options'  => $this->options
+            'dsn'               => $this->dsn,
+            'driver'            => $this->driver,
+            'host'              => $this->host,
+            'port'              => $this->port,
+            'charset'           => $this->charset,
+            'username'          => $this->username,
+            'password'          => $this->password,
+            'dbname'            => $this->dbName,
+            'prefix'            => $this->prefix,
+            'wallet_location'   => $this->wallet_location,
+            'collate'           => $this->collate,
+            'options'           => $this->options
         ];
     }
 }
