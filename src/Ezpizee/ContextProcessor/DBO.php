@@ -49,26 +49,33 @@ class DBO implements JsonSerializable
             defined('EZPIZEE_STACK_SQL_STM') && EZPIZEE_STACK_SQL_STM) {
             $this->setIsDebug(true);
         }
-        try {
-            if (isset(self::$connections[$this->config->dsn])) {
-                $this->conn = self::$connections[$this->config->dsn];
+        if (isset(self::$connections[$this->config->dsn])) {
+            $this->conn = self::$connections[$this->config->dsn];
+        }
+        else if ($this->config->driver === 'oracle_oci') {
+            $this->conn = oci_connect($this->config->username, $this->config->password, $this->config->dsn, $this->config->charset);
+            if (!$this->conn) {
+                $m = oci_error();
+                throw new RuntimeException(
+                    "Failed to connect to db server (".$this->config->driver."): " . $m['message'] . ' (' . $this->config->dsn . ')',
+                    500
+                );
             }
             else {
-                if ($this->config->driver === 'oracle_oci') {
-                    //phpinfo();die();
-                    $this->conn = oci_connect($this->config->username, $this->config->password, $this->config->dsn, $this->config->charset);
-                }
-                else {
-                    $this->conn = new PDO($this->config->dsn, $this->config->username, $this->config->password, $this->config->options);
-                }
                 self::$connections[$this->config->dsn] = $this->conn;
             }
         }
-        catch (PDOException $e) {
-            throw new RuntimeException(
-                "Failed to connect to db server (".$this->config->driver."): " . $e->getMessage() . ' (' . $this->config->dsn . ')',
-                500
-            );
+        else {
+            try {
+                $this->conn = new PDO($this->config->dsn, $this->config->username, $this->config->password, $this->config->options);
+                self::$connections[$this->config->dsn] = $this->conn;
+            }
+            catch (PDOException $e) {
+                throw new RuntimeException(
+                    "Failed to connect to db server (".$this->config->driver."): " . $e->getMessage() . ' (' . $this->config->dsn . ')',
+                    500
+                );
+            }
         }
     }
 

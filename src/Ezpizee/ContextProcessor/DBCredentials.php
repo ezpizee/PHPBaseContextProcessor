@@ -16,7 +16,8 @@ class DBCredentials implements JsonSerializable
     public $password;
     public $dbName;
     public $prefix;
-    public $wallet_location;
+    public $service_name;
+    public $oracle_region;
     public $collate = 'utf8_unicode_ci';
     public $options = null;
 
@@ -81,8 +82,12 @@ class DBCredentials implements JsonSerializable
             $this->dbName = '';
         }
 
-        if (isset($config['wallet_location'])) {
-            $this->wallet_location = $config['wallet_location'];
+        if (isset($config['service_name'])) {
+            $this->service_name = $config['service_name'];
+        }
+
+        if (isset($config['oracle_region'])) {
+            $this->oracle_region = $config['oracle_region'];
         }
 
         if (isset($config['prefix'])) {
@@ -111,14 +116,13 @@ class DBCredentials implements JsonSerializable
         if ($this->driver && $this->host) {
             $this->fetchDriver();
             if ($this->driver === 'oracle_oci') {
-                //https://developer.oracle.com/php/
-                //http://pecl.php.net/package/oci8
-                //${host}:${port}/${db}?wallet_location=${oracleWalletPath}
-                //oci:dbname=//localhost:1521/mydb
-                $this->dsn = //'oci:dbname='.
-                    $this->host.':'.$this->port.'/'.$this->dbName
-                    .'?wallet_location='.$this->wallet_location
-                    .'';
+                $dsn = '(description= (retry_count=2)(retry_delay=1)(address=(protocol=tcps)(port=${port})(host=${host}))'.
+                    '(connect_data=(service_name=${service_name}))'.
+                    '(security=(ssl_server_cert_dn="CN=${host}, OU=${oracle_region}, O=Oracle Corporation, L=Redwood City, ST=California, C=US")))';
+                $this->dsn = str_replace(
+                    ['${port}', '${host}', '${service_name}', '${oracle_region}'],
+                    [$this->port, $this->host, $this->service_name, $this->oracle_region],
+                    $dsn);
             }
             else {
                 $this->dsn = $this->driver . ':host=' . $this->host .
@@ -176,7 +180,8 @@ class DBCredentials implements JsonSerializable
             'password'          => $this->password,
             'dbname'            => $this->dbName,
             'prefix'            => $this->prefix,
-            'wallet_location'   => $this->wallet_location,
+            'service_name'      => $this->service_name,
+            'oracle_region'     => $this->oracle_region,
             'collate'           => $this->collate,
             'options'           => $this->options
         ];
