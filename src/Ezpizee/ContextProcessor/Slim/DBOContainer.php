@@ -25,7 +25,7 @@ class DBOContainer
             if ($settings instanceof Collection) {
                 if ($settings->has('ezpizee')) {
                     $ezpizee = $settings->get('ezpizee');
-                    if (!empty($ezpizee) || !isset($ezpizee['dbo']) || !isset($ezpizee['dbo']['connection'])) {
+                    if (!empty($ezpizee) && isset($ezpizee['dbo']) && isset($ezpizee['dbo']['connection'])) {
                         $this->config = new DBCredentials($ezpizee['dbo']['connection']);
                         $this->dbo = self::getDBO($ezpizee['dbo']['connection']);
                     }
