@@ -23,24 +23,26 @@ class DBOContainer
         if (empty($this->dbo)) {
             $settings = $container->get('settings');
             if ($settings instanceof Collection) {
-                $ezpizee = $settings->get('ezpizee');
-                if (!empty($ezpizee) || !isset($ezpizee['dbo']) || !isset($ezpizee['dbo']['connection'])) {
-                    $this->config = new DBCredentials($ezpizee['dbo']['connection']);
-                    $this->dbo = self::getDBO($ezpizee['dbo']['connection']);
-                }
-                else {
-                    throw new RuntimeException('ezpizee setting is missing', 500);
+                if ($settings->has('ezpizee')) {
+                    $ezpizee = $settings->get('ezpizee');
+                    if (!empty($ezpizee) || !isset($ezpizee['dbo']) || !isset($ezpizee['dbo']['connection'])) {
+                        $this->config = new DBCredentials($ezpizee['dbo']['connection']);
+                        $this->dbo = self::getDBO($ezpizee['dbo']['connection']);
+                    }
+                    else {
+                        throw new RuntimeException('ezpizee setting is missing', 500);
+                    }
                 }
             }
         }
         return $this;
     }
 
+    public function isConnected(): bool {return $this->dbo instanceof DBO;}
+
     public function getConnection(): DBO {return $this->dbo;}
 
     public function getConfig(): DBCredentials {return $this->config;}
 
-    public static function getDBO(array $config): DBO {
-        return new DBO(new DBCredentials($config));
-    }
+    public static function getDBO(array $config): DBO {return new DBO(new DBCredentials($config));}
 }
