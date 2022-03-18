@@ -398,19 +398,7 @@ abstract class Base
             method_exists($this, 'sendFirebaseTopic')) {
             $this->sendFirebaseTopic();
         }
-        else if (defined('KAFKA_INTEGRATED') && KAFKA_INTEGRATED &&
-            method_exists($this, 'sendKafkaTopic')) {
-            $this->sendKafkaTopic();
-        }
-        else if (defined('RABBITMQ_INTEGRATED') && RABBITMQ_INTEGRATED &&
-            method_exists($this, 'sendRabbitMQTopic')) {
-            $this->sendRabbitMQTopic();
-        }
     }
 
     protected function sendFirebaseTopic(): void {}
-
-    protected function sendKafkaTopic(): void {}
-
-    protected function sendRabbitMQTopic(): void {}
 }
