@@ -67,7 +67,7 @@ abstract class Base
         $this->timestampNow = strtotime('now');
         $this->systemConnection = $em->isConnected() ? $em->getConnection() : null;
         $this->connection = $this->systemConnection;
-        $this->hasFormSubmission = $this->request->method()==='POST' && !empty($this->request->getRequestParamsAsArray());
+        $this->hasFormSubmission = ($this->request->method()==='POST' || $this->request->method()==='PUT') && !empty($this->request->getRequestParamsAsArray());
     }
 
     /**
