@@ -114,11 +114,15 @@ abstract class Base
                             }
                         }
                         else {
+                            $this->beforeProcessContext();
                             $this->processContext();
+                            $this->afterProcessContext();
                         }
                     }
                     else {
+                        $this->beforeProcessContext();
                         $this->processContext();
+                        $this->afterProcessContext();
                     }
                 }
                 else {
@@ -146,23 +150,14 @@ abstract class Base
 
     public final function setContext(array $context): void{$this->context = $context;}
 
-    abstract protected function allowedMethods()
-    : array;
-
-    abstract protected function requiredAccessToken()
-    : bool;
-
-    abstract protected function isValidAccessToken()
-    : bool;
-
-    abstract protected function validRequiredParams()
-    : bool;
-
-    abstract protected function isSystemUserOnly()
-    : bool;
-
-    abstract protected function isSystemUser(string $user, string $pwd)
-    : bool;
+    abstract protected function allowedMethods(): array;
+    abstract protected function requiredAccessToken(): bool;
+    abstract protected function isValidAccessToken(): bool;
+    abstract protected function validRequiredParams(): bool;
+    abstract protected function isSystemUserOnly(): bool;
+    abstract protected function isSystemUser(string $user, string $pwd): bool;
+    abstract protected function beforeProcessContext(): void;
+    abstract protected function afterProcessContext(): void;
 
     public final function setContextDebug($debug): void {$this->context['debug'] = $debug;}
 
