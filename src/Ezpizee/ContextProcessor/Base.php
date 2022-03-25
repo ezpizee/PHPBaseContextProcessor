@@ -15,25 +15,15 @@ use RuntimeException;
 
 abstract class Base
 {
-    /**
-     * @var DBO
-     */
+    /** @var DBO $connection */
     protected $connection;
-    /**
-     * The connection to the ezpz_user database
-     *
-     * @var DBO
-     */
+    /** @var DBO $systemConnection */
     protected $systemConnection;
-    /**
-     * Used for setting data to send to microservice messaging service
-     *
-     * @var array
-     */
+    /** @var array $dataForMessagingService */
     protected $dataForMessagingService = [];
-
+    /** @var string $serviceName */
     private static $serviceName = '';
-
+    /** @var array $context */
     protected $context = [
         'status'  => 'OK',
         'message' => 'SUCCESS',
@@ -41,21 +31,19 @@ abstract class Base
         'data'    => null,
         'debug'   => null
     ];
-
-    /**
-     * @var Request
-     */
+    /** @var Request $request */
     protected $request;
-
+    /** @var array $requestData */
     protected $requestData = [];
-
+    /** @var array $requiredFieldsConfigData */
     protected $requiredFieldsConfigData = [];
-
+    /** @var bool $isAllRequiredFieldsValid */
     protected $isAllRequiredFieldsValid = false;
-
+    /** @var int $timestampNow */
     protected $timestampNow = 0;
+    /** @var bool $hasFormSubmission */
     protected $hasFormSubmission = false;
-
+    /** constructor */
     public function __construct() {}
 
     /**
