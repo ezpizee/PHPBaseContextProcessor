@@ -16,15 +16,15 @@ use RuntimeException;
 abstract class Base
 {
     /** @var DBO $connection */
-    protected $connection;
+    protected DBO $connection;
     /** @var DBO $systemConnection */
-    protected $systemConnection;
+    protected DBO $systemConnection;
     /** @var array $dataForMessagingService */
-    protected $dataForMessagingService = [];
+    protected array $dataForMessagingService = [];
     /** @var string $serviceName */
-    private static $serviceName = '';
+    private static string $serviceName = '';
     /** @var array $context */
-    protected $context = [
+    protected array $context = [
         'status'  => 'OK',
         'message' => 'SUCCESS',
         'code'    => 200,
@@ -32,17 +32,17 @@ abstract class Base
         'debug'   => null
     ];
     /** @var Request $request */
-    protected $request;
+    protected Request $request;
     /** @var array $requestData */
-    protected $requestData = [];
+    protected array $requestData = [];
     /** @var array $requiredFieldsConfigData */
-    protected $requiredFieldsConfigData = [];
+    protected array $requiredFieldsConfigData = [];
     /** @var bool $isAllRequiredFieldsValid */
-    protected $isAllRequiredFieldsValid = false;
+    protected bool $isAllRequiredFieldsValid = false;
     /** @var int $timestampNow */
-    protected $timestampNow = 0;
+    protected int $timestampNow = 0;
     /** @var bool $hasFormSubmission */
-    protected $hasFormSubmission = false;
+    protected bool $hasFormSubmission = false;
     /** constructor */
     public function __construct() {}
 
@@ -53,7 +53,9 @@ abstract class Base
     : void
     {
         $this->timestampNow = strtotime('now');
-        $this->systemConnection = $em->isConnected() ? $em->getConnection() : null;
+        if ($em->isConnected()) {
+            $this->systemConnection = $em->getConnection();
+        }
         $this->connection = $this->systemConnection;
         $this->hasFormSubmission = ($this->request->method()==='POST' || $this->request->method()==='PUT') && !empty($this->request->getRequestParamsAsArray());
     }
