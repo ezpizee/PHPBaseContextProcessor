@@ -31,14 +31,16 @@ class DBO implements JsonSerializable
 
     public function __construct(DBCredentials $config, bool $stopWhenError = false, bool $keepResults = false)
     {
-        $this->stopWhenError = $stopWhenError;
-        $this->keepResults = $keepResults;
-        $this->config = $config;
-        if ($this->config->isValid()) {
-            $this->connect();
-        }
-        else {
-            throw new RuntimeException('Invalid sql credentials (' . DBO::class . ')');
+        if ($config->isValid()) {
+            $this->stopWhenError = $stopWhenError;
+            $this->keepResults = $keepResults;
+            $this->config = $config;
+            if ($this->config->isValid()) {
+                $this->connect();
+            }
+            else {
+                throw new RuntimeException('Invalid sql credentials (' . DBO::class . ')');
+            }
         }
     }
 
