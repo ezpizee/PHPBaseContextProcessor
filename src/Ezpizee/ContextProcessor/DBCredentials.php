@@ -18,7 +18,7 @@ class DBCredentials implements JsonSerializable
     public $prefix;
     public $service_name;
     public $oracle_region;
-    public $collate = 'utf8_unicode_ci';
+    public $collate = 'utf8';
     public $options = null;
 
     public function __construct(array $config)
