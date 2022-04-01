@@ -11,6 +11,7 @@ use RuntimeException;
 
 class DBO implements JsonSerializable
 {
+    private static array $errors = [];
     private static array $connections = [];
     /** @var PDO|resource|false $conn */
     private $conn;
@@ -18,7 +19,6 @@ class DBO implements JsonSerializable
     private string $stm = '';
     private bool $stopWhenError = false;
     private bool $keepResults = false;
-    private array $errors = [];
     private array $results = [];
     private array $queries = [];
     private bool $isDebug = false;
@@ -79,7 +79,7 @@ class DBO implements JsonSerializable
 
     public function setIsDebug(bool $b): void {$this->isDebug = $b;}
 
-    public function getErrors(): array {return $this->errors;}
+    public static function getErrors(): array {return self::$errors;}
 
     public function getDebugQueries(): array {return $this->queries;}
 
@@ -137,7 +137,7 @@ class DBO implements JsonSerializable
             else {
                 $this->query($this->stm);
             }
-            return sizeof($this->errors) < 1;
+            return sizeof(self::$errors) < 1;
         }
         else {
             throw new RuntimeException(DBO::class . '.execute: query statement is empty', 500);
@@ -150,7 +150,7 @@ class DBO implements JsonSerializable
 
     private function reset(): void
     {
-        $this->errors = [];
+        self::$errors = [];
         $this->results = [];
     }
 
@@ -176,7 +176,7 @@ class DBO implements JsonSerializable
                             $this->results[] = $row;
                         }
                     } else if (!empty($this->conn->errorInfo())) {
-                        $this->errors[] = $this->conn->errorInfo();
+                        self::$errors[] = $this->conn->errorInfo();
                     }
                 } else {
                     $result = $this->conn->query($query);
@@ -188,7 +188,7 @@ class DBO implements JsonSerializable
                             }
                         }
                     } else if (!empty($this->conn->errorInfo())) {
-                        $this->errors[] = $this->conn->errorInfo();
+                        self::$errors[] = $this->conn->errorInfo();
                     }
                 }
             } else {
@@ -197,7 +197,7 @@ class DBO implements JsonSerializable
                     if ($this->stopWhenError || $stopWhenError) {
                         throw new RuntimeException(DBO::class . ".query: " . json_encode($this->conn->errorInfo()) . "\n");
                     } else {
-                        $this->errors[] = $this->conn->errorInfo();
+                        self::$errors[] = $this->conn->errorInfo();
                     }
                 } else if ($result instanceof PDOStatement && $this->keepResults) {
                     $this->results[] = $result->fetchAll(PDO::FETCH_ASSOC);
