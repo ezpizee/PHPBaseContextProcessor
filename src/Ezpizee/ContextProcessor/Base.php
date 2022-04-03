@@ -333,12 +333,12 @@ abstract class Base
     }
 
     /**
-     * @param null $arg
+     * @param string|array|object|null $arg
      * @param string $key
      *
      * @return array
      */
-    protected final function getFieldFromRequiredFields($arg = null, $key = 'name')
+    public final function getFieldFromRequiredFields($arg = null, $key = 'name')
     : array
     {
         $data1 = [];
