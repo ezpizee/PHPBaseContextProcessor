@@ -10,34 +10,29 @@ final class NestedTree
 
     /** @var DBO $dbo */
     private DBO $dbo;
-    /** @var string $table */
     private string $table;
     private string $referenceId = ''; // ordering_item
     private string $orderingPosition = '';
     private string $parentId = '';
     private string $editId = '';
     private string $insertId = '';
-    //private int $parentLft = 0;
-    private int $parentRgt = 0;
-    private int $nodeLft = 0;
-    private int $nodeRgt = 0;
     private string $nodePath = '';
-
-    private bool $exists = false;
-
-    private array $updateStatementList = [];
-    private array $insertFieldList = [];
-    private array $insertValueList = [];
-
-    private bool $updateChildren = false;
-    private int $newNodeLevel = 0;
     private string $newNodePath = '';
     private string $pathMD5 = '';
     private string $newNodeAlias = '';
-
-    private bool $error = false;
     private string $msg = '';
     private string $limit = '';
+    private array $updateStatementList = [];
+    private array $insertFieldList = [];
+    private array $insertValueList = [];
+    private bool $exists = false;
+    private bool $updateChildren = false;
+    private bool $error = false;
+    private int $newNodeLevel = 0;
+    private int $parentRgt = 0;
+    private int $nodeLft = 0;
+    private int $nodeRgt = 0;
+    //private int $parentLft = 0;
 
     public function __construct(DBO $dbo, string $table)
     {
