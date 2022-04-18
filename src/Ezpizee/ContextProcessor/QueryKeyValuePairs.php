@@ -2,28 +2,28 @@
 
 namespace Ezpizee\ContextProcessor;
 
+use JetBrains\PhpStorm\ArrayShape;
 use JsonSerializable;
 use RuntimeException;
 
 class QueryKeyValuePairs implements JsonSerializable
 {
-    private $tableFields = [];
-    private $fields = [];
-    private $values = [];
-    private $primaryKeys = [];
-    private $primaryKeysValues = [];
-    private $condition = '';
-    private $existentCondition = '';
-    private $multiInsertFieldValues = [];
-    private $omitSqlQuoteValues = [];
+    private string $condition = '';
+    private string $existentCondition = '';
+    private array $tableFields = [];
+    private array $fields = [];
+    private array $values = [];
+    private array $primaryKeys = [];
+    private array $primaryKeysValues = [];
+    private array $multiInsertFieldValues = [];
+    private array $omitSqlQuoteValues = [];
 
-    public function __construct(array $tableFields=array())
-    {
-        $this->tableFields = $tableFields;
-    }
+    public function __construct(array $tableFields=array()) {$this->tableFields = $tableFields;}
 
     public function hasMultiInsertFieldValues(): bool {return !empty($this->multiInsertFieldValues);}
-    public function addMultiInsertFieldValues(string $key, $value): void {
+
+    public function addMultiInsertFieldValues(string $key, $value): void
+    {
         if (empty($key) || is_numeric($key)) {
             throw new RuntimeException('Invalid key ('.self::class.'->addMultiInsertFieldValues)', 500);
         }
@@ -33,7 +33,9 @@ class QueryKeyValuePairs implements JsonSerializable
         $this->formatValue($value);
         $this->multiInsertFieldValues[$key][] = $value;
     }
-    public function getMultiInsertFieldValues(): KeyValue {
+
+    public function getMultiInsertFieldValues(): KeyValue
+    {
         $keyValue = new KeyValue();
         if (!empty($this->multiInsertFieldValues)) {
             $keyValue->keys = array_keys($this->multiInsertFieldValues);
@@ -57,8 +59,7 @@ class QueryKeyValuePairs implements JsonSerializable
         return $keyValue;
     }
 
-    public function addFieldValue($key, $value, bool $omitSqlQuote=false)
-    : void
+    public function addFieldValue($key, $value, bool $omitSqlQuote=false): void
     {
         $key = str_replace("`", '', $key);
         if (!empty($this->tableFields)) {
@@ -79,8 +80,8 @@ class QueryKeyValuePairs implements JsonSerializable
             $this->omitSqlQuoteValues[$key] = $omitSqlQuote;
         }
     }
-    public function setFieldValueIfNotExists($key, $val)
-    : void
+
+    public function setFieldValueIfNotExists($key, $val): void
     {
         if (!isset($this->fields[$key])) {
             $this->fields[$key] = $key;
@@ -90,8 +91,8 @@ class QueryKeyValuePairs implements JsonSerializable
     }
 
     public function hasCondition(): bool {return !empty($this->condition);}
-    public function addCondition(string $key, string $val, string $operator='AND')
-    : void
+
+    public function addCondition(string $key, string $val, string $operator='AND'): void
     {
         if (!in_array(strtoupper(trim($operator)), ['AND','OR'])) {
             throw new RuntimeException('Operator for condition has to be either AND or OR ('.self::class.'->addCondition)', 500);
@@ -101,8 +102,8 @@ class QueryKeyValuePairs implements JsonSerializable
             $this->condition = $this->condition.(!empty($this->condition) ? ' '.strtoupper(trim($operator)).' ' : '').$condition;
         }
     }
-    public function setCondition(string $condition, string $operator='AND')
-    : void
+
+    public function setCondition(string $condition, string $operator='AND'): void
     {
         if (empty($condition)) {
             throw new RuntimeException('Condition cannot be empty ('.self::class.'->setCondition)', 500);
@@ -114,11 +115,12 @@ class QueryKeyValuePairs implements JsonSerializable
             $this->condition = $this->condition.(!empty($this->condition) ? ' '.strtoupper(trim($operator)).' ' : '').$condition;
         }
     }
+
     public function getCondition(): string {return $this->condition;}
 
     public function hasExistentCondition(): bool {return !empty($this->existentCondition);}
-    public function addExistentCondition(string $key, string $val, string $operator='AND')
-    : void
+
+    public function addExistentCondition(string $key, string $val, string $operator='AND'): void
     {
         if (!in_array(strtoupper(trim($operator)), ['AND','OR'])) {
             throw new RuntimeException('Operator for condition has to be either AND or OR ('.self::class.'->addExistentCondition)', 500);
@@ -129,8 +131,8 @@ class QueryKeyValuePairs implements JsonSerializable
                 (!empty($this->existentCondition) ? ' '.strtoupper(trim($operator)).' ' : '').$condition;
         }
     }
-    public function setExistentCondition(string $condition, string $operator='AND')
-    : void
+
+    public function setExistentCondition(string $condition, string $operator='AND'): void
     {
         if (empty($condition)) {
             throw new RuntimeException('Condition cannot be empty ('.self::class.'->setExistentCondition)', 500);
@@ -143,9 +145,11 @@ class QueryKeyValuePairs implements JsonSerializable
                 (!empty($this->existentCondition) ? ' '.strtoupper(trim($operator)).' ' : '').$condition;
         }
     }
+
     public function getExistentCondition(): string {return $this->existentCondition;}
 
-    public function setTableFields(array $tableFields): void {
+    public function setTableFields(array $tableFields): void
+    {
         if (empty($this->tableFields)){
             $this->tableFields = $tableFields;
         }
@@ -153,10 +157,13 @@ class QueryKeyValuePairs implements JsonSerializable
             throw new RuntimeException('tableFields is not empty ('.self::class.'->setTableFields)', 500);
         }
     }
+
     public function getTableFields(): array {return $this->tableFields;}
+
     public function hasTableFields(): bool {return !empty($this->tableFields);}
 
-    public function isValidPrimaryKeys(): bool {
+    public function isValidPrimaryKeys(): bool
+    {
         if (!empty($this->tableFields)) {
             if (!empty($this->primaryKeys)) {
                 foreach ($this->primaryKeys as $key) {
@@ -178,12 +185,14 @@ class QueryKeyValuePairs implements JsonSerializable
             throw new RuntimeException('tableFields is empty ('.self::class.'->isValidKeys)', 500);
         }
     }
-    public function isInPrimaryKeys(string $field)
-    : bool
+
+    public function isInPrimaryKeys(string $field): bool
     {
         return in_array($field, $this->primaryKeys) || in_array(strtolower($field), $this->primaryKeys) || in_array(strtoupper($field), $this->primaryKeys);
     }
-    public function setPrimaryKeys($keys): void {
+
+    public function setPrimaryKeys($keys): void
+    {
         if (!empty($keys) && !is_numeric($keys) && !is_bool($keys)) {
             if (is_string($keys)) {
                 $this->primaryKeys = explode(',', $keys);
@@ -202,11 +211,15 @@ class QueryKeyValuePairs implements JsonSerializable
             throw new RuntimeException('keys is empty ('.self::class.'->setPrimaryKeys)', 500);
         }
     }
+
     public function getPrimaryKeys(): array {return $this->primaryKeys;}
+
     public function getNumPrimaryKeys(): int {return sizeof($this->primaryKeys);}
+
     public function getPrimaryKeysAsString(): string {return implode(',', $this->primaryKeys);}
 
-    public function addPrimaryKeysValue(string $key, string $value): void {
+    public function addPrimaryKeysValue(string $key, string $value): void
+    {
         if (in_array($key, $this->primaryKeys)) {
             $this->primaryKeysValues[$key] = $value;
         }
@@ -214,10 +227,10 @@ class QueryKeyValuePairs implements JsonSerializable
             throw new RuntimeException('key does not exist ('.self::class.'->addPrimaryKeysValue)', 500);
         }
     }
+
     public function getPrimaryKeyValue(string $key): string {return isset($this->primaryKeysValues[$key]) ? $this->primaryKeysValues[$key] : "";}
     public function getPrimaryKeysValues(): array {return $this->primaryKeysValues;}
     public function hasPrimaryKeyValue(string $key): bool {return isset($this->primaryKeysValues[$key]);}
-
     public function getFields(): array {return $this->fields;}
     public function getValues(): array {return $this->values;}
     public function getValue(string $key, string $default=''): string {return isset($this->values[$key]) ? $this->values[$key] : $default;}
@@ -226,8 +239,7 @@ class QueryKeyValuePairs implements JsonSerializable
     public function hasValue(string $key): bool {return isset($this->values[$key]);}
     public function isOmitSqlQuote(string $key): bool {return isset($this->omitSqlQuoteValues[$key]) && $this->omitSqlQuoteValues[$key] === true;}
 
-    public function reset()
-    : void
+    public function reset(): void
     {
         $this->tableFields = [];
         $this->fields = [];
@@ -238,8 +250,7 @@ class QueryKeyValuePairs implements JsonSerializable
         $this->existentCondition = '';
     }
 
-    private function formatValue(&$value)
-    : void
+    private function formatValue(&$value): void
     {
         if ($value !== null) {
             $value = is_array($value) || is_object($value) ? json_encode($value) : (is_null($value) ? '' : $value);
@@ -256,7 +267,8 @@ class QueryKeyValuePairs implements JsonSerializable
         }
     }
 
-    public function jsonSerialize()
+    #[ArrayShape(['tableFields' => "array", 'fields' => "array", 'values' => "array", 'primaryKeys' => "array", 'primaryKeysValues' => "array", 'condition' => "string", 'existentCondition' => "string", 'multiInsertFieldValues' => "array", 'omitSqlQuoteValues' => "array"])]
+    public function jsonSerialize(): array
     {
         return [
             'tableFields'=>$this->tableFields,
@@ -271,8 +283,5 @@ class QueryKeyValuePairs implements JsonSerializable
         ];
     }
 
-    public function __toString()
-    {
-        return json_encode($this->jsonSerialize());
-    }
+    public function __toString(): string {return json_encode($this->jsonSerialize());}
 }

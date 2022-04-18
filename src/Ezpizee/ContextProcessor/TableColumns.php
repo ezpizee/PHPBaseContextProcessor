@@ -2,12 +2,13 @@
 
 namespace Ezpizee\ContextProcessor;
 
+use JetBrains\PhpStorm\ArrayShape;
 use JsonSerializable;
 
 class TableColumns implements JsonSerializable
 {
-    private $fieldList = [];
-    private $fieldObject = [];
+    private array $fieldList = [];
+    private array $fieldObject = [];
 
     public function __construct(array $rows)
     {
@@ -26,8 +27,7 @@ class TableColumns implements JsonSerializable
         }
     }
 
-    public function getFieldList(bool $excludePK = false)
-    : array
+    public function getFieldList(bool $excludePK = false): array
     {
         if ($excludePK) {
             $fields = [];
@@ -41,8 +41,7 @@ class TableColumns implements JsonSerializable
         return $this->fieldList;
     }
 
-    public function getFieldObjectElement(int $index, string $field)
-    : string
+    public function getFieldObjectElement(int $index, string $field): string
     {
         if (isset($this->fieldObject[$index])) {
             return isset($this->fieldObject[$index][$field]) ? $this->fieldObject[$index][$field] : "";
@@ -50,54 +49,30 @@ class TableColumns implements JsonSerializable
         return "";
     }
 
-    public function getFieldName(int $index)
-    : string
-    {
-        return $this->getFieldObjectElement($index, 'Field');
-    }
+    public function getFieldName(int $index): string {return $this->getFieldObjectElement($index, 'Field');}
 
-    public function getFieldObject()
-    : array
-    {
-        return $this->fieldObject;
-    }
+    public function getFieldObject(): array {return $this->fieldObject;}
 
-    public function hasField(int $index, string $name)
-    : bool
-    {
-        return $this->getFieldObjectElement($index, 'Field') === $name;
-    }
+    public function hasField(int $index, string $name): bool {return $this->getFieldObjectElement($index, 'Field') === $name;}
 
-    public function isType(int $index, string $type)
-    : bool
-    {
-        return $this->getFieldType($index) === $type;
-    }
+    public function isType(int $index, string $type): bool {return $this->getFieldType($index) === $type;}
 
-    public function getFieldType(int $index)
-    : string
-    {
-        return $this->getFieldObjectElement($index, 'Type');
-    }
+    public function getFieldType(int $index): string {return $this->getFieldObjectElement($index, 'Type');}
 
-    public function getDefault(int $index)
-    : string
+    public function getDefault(int $index): string
     {
         $default = $this->getFieldObjectElement($index, 'Default');
         return empty($default) ? "" : $default;
     }
 
-    public function getSize(int $index)
-    : int
+    public function getSize(int $index): int
     {
         $size = $this->getFieldObjectElement($index, 'Size');
         return $size ? (int)$size : 0;
     }
 
-    public function __toString() { return json_encode($this->jsonSerialize()); }
+    public function __toString(): string { return json_encode($this->jsonSerialize()); }
 
-    public function jsonSerialize()
-    {
-        return ['fieldList' => $this->fieldList, 'fieldObject' => $this->fieldObject];
-    }
+    #[ArrayShape(['fieldList' => "array", 'fieldObject' => "array"])]
+    public function jsonSerialize(): array {return ['fieldList' => $this->fieldList, 'fieldObject' => $this->fieldObject];}
 }
