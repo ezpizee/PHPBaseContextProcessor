@@ -29,7 +29,9 @@ abstract class Base
         'message' => 'SUCCESS',
         'code'    => 200,
         'data'    => null,
-        'debug'   => null
+        'total'   => 0,
+        'debug'   => null,
+        'queries' => []
     ];
     /** @var Request $request */
     protected Request $request;
@@ -49,8 +51,7 @@ abstract class Base
     /**
      * @param DBOContainer $em
      */
-    protected final function setEntityManager(DBOContainer $em)
-    : void
+    protected final function setEntityManager(DBOContainer $em): void
     {
         $this->timestampNow = strtotime('now');
         if ($em->isConnected()) {
@@ -79,8 +80,7 @@ abstract class Base
 
     public static final function getServiceName(): string{return self::$serviceName;}
 
-    public final function getContext()
-    : array
+    public final function getContext(): array
     {
         $this->preProcessContext();
 
@@ -159,8 +159,6 @@ abstract class Base
     abstract protected function beforeProcessContext(): void;
     abstract protected function afterProcessContext(): void;
 
-    public final function setContextDebug($debug): void {$this->context['debug'] = $debug;}
-
     protected function preProcessContext(): void {}
 
     abstract public function processContext(): void;
@@ -177,33 +175,21 @@ abstract class Base
 
     public final function setRequestData(array $data): void{$this->requestData = $data;}
 
-    public final function setContextData(array $data): void{$this->context['data'] = $data;}
+    public final function setContextStatus(string $status): void {$this->context['status'] = $status;}
+    public final function setContextMessage(string $msg): void {$this->context['message'] = $msg;}
+    public final function setContextCode(int $code): void {$this->context['code'] = $code;}
+    public final function setContextData(array $data): void {$this->context['data'] = $data;}
+    public final function setContextTotal(int $n): void {$this->context['total'] = $n;}
+    public final function setContextDebug($debug): void {$this->context['debug'] = $debug;}
+    public final function setContextQueries(array $queries): void {$this->context['queries'] = $queries;}
 
-    public final function setContextStatus(string $status): void{$this->context['status'] = $status;}
-
-    public final function setContextCode(int $code): void{$this->context['code'] = $code;}
-
-    public final function setContextMessage(string $msg): void{$this->context['message'] = $msg;}
-
-    public final function getContextCode()
-    : int
-    {
-        return is_string($this->context['code']) ? (int)$this->context['code'] : $this->context['code'];
-    }
-
-    public final function getContextMessage(): string{return $this->context['message'];}
-
-    public final function getContextData()
-    : array
-    {
-        return empty($this->context['data']) ? [] : $this->context['data'];
-    }
-
-    public final function getContextDebug()
-    : array
-    {
-        return empty($this->context['debug']) ? [] : $this->context['debug'];
-    }
+    public final function getContextStatus(): string {return $this->context['status'];}
+    public final function getContextMessage(): string {return $this->context['message'];}
+    public final function getContextCode(): int {return is_string($this->context['code']) ? (int)$this->context['code'] : $this->context['code'];}
+    public final function getContextData(): array {return $this->context['data'] ?? [];}
+    public final function getContextTotal(): int {return $this->context['total'];}
+    public final function getContextDebug(): array {return $this->context['debug'] ?? [];}
+    public final function getContextQueries(): array {return !empty($this->context['queries']) ? $this->context['queries'] : [];}
 
     public final function logger($msg, string $type = 'error')
     {
@@ -225,9 +211,7 @@ abstract class Base
         array $headers = array(),
         array $cookies = array(),
         string $bodyContent = '',
-        $response = null
-    )
-    : Response
+        $response = null): Response
     {
         $context = $this->context;
         $context['message'] = 'Should be implemented by sub-class';
@@ -250,8 +234,7 @@ abstract class Base
      *
      * @return bool
      */
-    protected final function defaultRequiredParamsValidator(string $configFilePath = '')
-    : bool
+    protected final function defaultRequiredParamsValidator(string $configFilePath = ''): bool
     {
         if (!$configFilePath) {
             $configFilePath = CustomLoader::getDir(get_called_class()) . EZPIZEE_DS. 'required-fields.json';
@@ -291,8 +274,7 @@ abstract class Base
         return $this->isAllRequiredFieldsValid;
     }
 
-    protected final function displayRequiredFields()
-    : void
+    protected final function displayRequiredFields(): void
     {
         if ($this->getRequestData('display') === 'required-fields') {
             header('Content-Type: application/json');
@@ -317,8 +299,7 @@ abstract class Base
         return null;
     }
 
-    private function hasRequestData(string $key)
-    : bool
+    private function hasRequestData(string $key): bool
     {
         if (!empty($this->request)) {
             return $this->request->hasRequestParam($key);
@@ -338,8 +319,7 @@ abstract class Base
      *
      * @return array
      */
-    public final function getFieldFromRequiredFields($arg = null, $key = 'name')
-    : array
+    public final function getFieldFromRequiredFields($arg = null, $key = 'name'): array
     {
         $data1 = [];
         $data2 = [];
@@ -371,16 +351,14 @@ abstract class Base
         return $data2;
     }
 
-    public final function closeDBConnection()
-    : void
+    public final function closeDBConnection(): void
     {
         if ($this->connection instanceof DBO && $this->connection->isConnected()) {
             $this->connection->closeConnection();
         }
     }
 
-    protected final function triggerMessagingServiceProducer()
-    : void
+    protected final function triggerMessagingServiceProducer(): void
     {
         if (defined('FIREBASE_INTEGRATED') && FIREBASE_INTEGRATED &&
             method_exists($this, 'sendFirebaseTopic')) {
