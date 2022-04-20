@@ -31,7 +31,8 @@ abstract class Base
         'data'    => null,
         'total'   => 0,
         'debug'   => null,
-        'queries' => []
+        'queries' => [],
+        'errors'  => null
     ];
     /** @var Request $request */
     protected Request $request;
@@ -150,18 +151,17 @@ abstract class Base
 
     public final function setContext(array $context): void{$this->context = $context;}
 
-    abstract protected function allowedMethods(): array;
-    abstract protected function requiredAccessToken(): bool;
-    abstract protected function isValidAccessToken(): bool;
-    abstract protected function validRequiredParams(): bool;
-    abstract protected function isSystemUserOnly(): bool;
-    abstract protected function isSystemUser(string $user, string $pwd): bool;
-    abstract protected function beforeProcessContext(): void;
-    abstract protected function afterProcessContext(): void;
+    abstract public function allowedMethods(): array;
+    abstract public function requiredAccessToken(): bool;
+    abstract public function validRequiredParams(): bool;
+    abstract public function isSystemUserOnly(): bool;
+    abstract public function beforeProcessContext(): void;
+    abstract public function afterProcessContext(): void;
+    abstract public function isValidAccessToken(): bool;
+    abstract public function isSystemUser(string $user, string $pwd): bool;
+    abstract public function processContext(): void;
 
     protected function preProcessContext(): void {}
-
-    abstract public function processContext(): void;
 
     protected function postProcessContext(): void {}
 
@@ -173,7 +173,7 @@ abstract class Base
         $this->requestData = $request->getRequestParamsAsArray();
     }
 
-    public final function setRequestData(array $data): void{$this->requestData = $data;}
+    public final function setRequestData(array $data): void {$this->requestData = $data;}
 
     public final function setContextStatus(string $status): void {$this->context['status'] = $status;}
     public final function setContextMessage(string $msg): void {$this->context['message'] = $msg;}
@@ -182,6 +182,7 @@ abstract class Base
     public final function setContextTotal(int $n): void {$this->context['total'] = $n;}
     public final function setContextDebug($debug): void {$this->context['debug'] = $debug;}
     public final function setContextQueries(array $queries): void {$this->context['queries'] = $queries;}
+    public final function setContextErrors($errors): void {$this->context['errors'] = $errors;}
 
     public final function getContextStatus(): string {return $this->context['status'];}
     public final function getContextMessage(): string {return $this->context['message'];}
@@ -190,6 +191,7 @@ abstract class Base
     public final function getContextTotal(): int {return $this->context['total'];}
     public final function getContextDebug(): array {return $this->context['debug'] ?? [];}
     public final function getContextQueries(): array {return !empty($this->context['queries']) ? $this->context['queries'] : [];}
+    public final function getContextErrors() {return $this->context['errors'];}
 
     public final function logger($msg, string $type = 'error')
     {
