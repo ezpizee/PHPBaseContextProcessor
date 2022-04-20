@@ -46,12 +46,12 @@ abstract class Base
     protected int $timestampNow = 0;
     /** @var bool $hasFormSubmission */
     protected bool $hasFormSubmission = false;
+    /** @var array $uriParams */
+    protected array $uriParams = [];
     /** constructor */
     public function __construct() {}
 
-    /**
-     * @param DBOContainer $em
-     */
+    /** @param DBOContainer $em */
     protected final function setEntityManager(DBOContainer $em): void
     {
         $this->timestampNow = strtotime('now');
@@ -222,7 +222,9 @@ abstract class Base
         return new Response($method, $path, json_encode($context));
     }
 
-    protected final function getUriParam($key): string{return RequestEndpointValidator::getUriParam($key);}
+    public final function setUriParam(array $params): void {$this->uriParams = $params;}
+    public final function addUriParam(string $key, string $value): void {$this->uriParams[$key] = $value;}
+    protected final function getUriParam(string $key): string {return $this->uriParams[$key] ?? RequestEndpointValidator::getUriParam($key);}
 
     /**
      * Allow child class to invoke default fields validator
