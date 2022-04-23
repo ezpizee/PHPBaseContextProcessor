@@ -2,6 +2,7 @@
 
 namespace Ezpizee\ContextProcessor;
 
+use Ezpizee\Utils\Logger;
 use Ezpizee\Utils\StringUtil;
 use JsonSerializable;
 use PDO;
@@ -163,6 +164,7 @@ class DBO implements JsonSerializable
             $this->results = $this->cachedResults[$md5Query];
         }
         else {
+            if (!$this->conn) {Logger::debug($query);}
             if ($this->isDebug) {
                 $this->queries[] = $query;
             }
