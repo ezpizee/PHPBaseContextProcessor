@@ -86,6 +86,8 @@ class DBO implements JsonSerializable
         }
     }
 
+    public function commit(): bool {return $this->conn->commit();}
+
     public function isConnected(): bool {return $this->conn instanceof PDO;}
 
     public function setIsDebug(bool $b): void {$this->isDebug = $b;}
