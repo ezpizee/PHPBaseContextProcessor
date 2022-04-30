@@ -111,6 +111,21 @@ class DBO implements JsonSerializable
 
     public function exec(string $query = ''): bool {return $this->execute($query);}
 
+    public function executeMultipleQueries(string $queries): void
+    {
+        $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, 0);
+        $this->conn->exec($queries);
+        if ($this->conn->errorInfo()) {
+            self::$errors[] = $this->conn->errorInfo();
+        }
+        if ($this->isDebug) {
+            $queries = explode(";\n", $queries);
+            foreach ($queries as $query) {
+                $this->queries[] = $query;
+            }
+        }
+    }
+
     public function executeQuery(string $query): bool {return $this->execute($query);}
 
     public function execute(string $query = ''): bool
