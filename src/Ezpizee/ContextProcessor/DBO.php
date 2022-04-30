@@ -100,6 +100,7 @@ class DBO implements JsonSerializable
             $this->conn = null;
             if (isset(self::$connections[$this->config->dsn])) {
                 unset(self::$connections[$this->config->dsn]);
+                $this->config = new DBCredentials([]);
             }
         }
     }
