@@ -35,6 +35,16 @@ class DBO implements JsonSerializable
         }
     }
 
+    public static function closeAllConnections(): void
+    {
+        if (!empty(self::$connections)) {
+            foreach (self::$connections as $i=>$connection) {
+                self::$connections[$i] = null;
+            }
+            self::$connections = [];
+        }
+    }
+
     private function connect(): void
     {
         if (defined('DEBUG') && DEBUG &&
