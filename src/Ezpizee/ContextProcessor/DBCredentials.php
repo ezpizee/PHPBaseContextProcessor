@@ -107,6 +107,11 @@ class DBCredentials implements JsonSerializable
             $this->setOptions();
         }
 
+        if (!empty($this->options) && defined('MYSQL_ATTR_SSL_CA')) {
+            $this->options[PDO::MYSQL_ATTR_SSL_CA] = MYSQL_ATTR_SSL_CA;
+            $this->options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        }
+
         $this->setDSN();
     }
 
