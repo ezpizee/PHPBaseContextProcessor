@@ -119,10 +119,7 @@ class DBO implements JsonSerializable
             self::$errors[] = $this->conn->errorInfo();
         }
         if ($this->isDebug) {
-            $queries = explode(";\n", $queries);
-            foreach ($queries as $query) {
-                $this->queries[] = $query;
-            }
+            $this->queries[] = $queries;
         }
     }
 
