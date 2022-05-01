@@ -345,9 +345,9 @@ class DBO implements JsonSerializable
 
     public function getConnections(): array {return array_keys(self::$connections);}
 
-    public function getConfig(): DBCredentials { return $this->config; }
+    public function getConfig(): DBCredentials {return $this->config;}
 
     public function jsonSerialize(): array {return $this->config->jsonSerialize();}
 
-    public function __toString() { return json_encode($this->jsonSerialize()); }
+    public function __toString(): string {return json_encode($this->jsonSerialize());}
 }
