@@ -2,7 +2,6 @@
 
 namespace Ezpizee\ContextProcessor;
 
-use Ezpizee\Utils\Logger;
 use Ezpizee\Utils\StringUtil;
 use JsonSerializable;
 use PDO;
