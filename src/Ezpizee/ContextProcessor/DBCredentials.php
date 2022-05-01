@@ -7,19 +7,19 @@ use PDO;
 
 class DBCredentials implements JsonSerializable
 {
-    public $dsn;
-    public $driver;
-    public $host;
-    public $port;
-    public $charset = 'utf8';
-    public $username;
-    public $password;
-    public $dbName;
-    public $prefix;
-    public $service_name;
-    public $oracle_region;
-    public $collate = 'utf8';
-    public $options = null;
+    public string   $dsn            = '';
+    public string   $driver         = '';
+    public string   $host           = '';
+    public string   $port           = '';
+    public string   $charset        = 'utf8';
+    public string   $username       = '';
+    public string   $password       = '';
+    public string   $dbName         = '';
+    public string   $prefix         = '';
+    public string   $service_name   = '';
+    public string   $oracle_region  = '';
+    public string   $collate        = 'utf8';
+    public array    $options        = [];
 
     public function __construct(array $config)
     {
@@ -118,8 +118,7 @@ class DBCredentials implements JsonSerializable
         $this->setDSN();
     }
 
-    private function setDSN()
-    : void
+    private function setDSN(): void
     {
         if ($this->driver && $this->host) {
             $this->fetchDriver();
@@ -141,42 +140,30 @@ class DBCredentials implements JsonSerializable
         }
     }
 
-    private function fetchDriver()
+    private function fetchDriver(): void
     {
         if ($this->driver === 'pdomysql' || $this->driver === 'pdo_mysql' || $this->driver === 'mysqli') {
             $this->driver = 'mysql';
         }
     }
 
-    private function setOptions()
-    : void
+    private function setOptions(): void
     {
         if ($this->collate) {
             if ($this->driver === 'mysql') {
-                $this->options = [
+                $this->options = array($this->options, [
                     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_PERSISTENT         => false,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . $this->charset . " COLLATE " . $this->collate
-                ];
+                ]);
             }
         }
     }
 
-    public function isValid()
-    : bool
-    {
-        return $this->dsn && $this->username && $this->password;
-    }
+    public function isValid(): bool {return $this->dsn && $this->username && $this->password;}
 
-    public function __toString()
-    : string
-    {
-        return json_encode($this->jsonSerialize());
-    }
-
-    public function jsonSerialize()
-    : array
+    public function jsonSerialize(): array
     {
         return [
             'dsn'               => $this->dsn,
@@ -194,4 +181,6 @@ class DBCredentials implements JsonSerializable
             'options'           => $this->options
         ];
     }
+
+    public function __toString(): string {return json_encode($this->jsonSerialize());}
 }
