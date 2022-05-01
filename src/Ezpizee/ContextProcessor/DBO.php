@@ -234,7 +234,10 @@ class DBO implements JsonSerializable
         }
     }
 
-    public final function getTableColumns(string $tableName): TableColumns {return (new TableColumns($this->loadAssocList('DESCRIBE ' . $this->quoteName($tableName))));}
+    public final function getTableColumns(string $tableName): TableColumns
+    {
+        return (new TableColumns($this->loadAssocList('DESCRIBE ' . $this->quoteName($tableName))));
+    }
 
     public final function alterStorageEngine(string $tb, string $engine): void {$this->exec('ALTER'.' TABLE '.$tb.' ENGINE = '.$engine);}
 
