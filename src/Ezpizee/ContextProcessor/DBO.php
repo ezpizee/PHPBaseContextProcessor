@@ -119,7 +119,7 @@ class DBO implements JsonSerializable
             $this->queries[] = $query;
         }
         $exec = $this->conn->exec($query);
-        if (!empty($this->conn->errorInfo())) {
+        if (!empty($this->conn->errorInfo()) && (int)$this->conn->errorCode() > 0) {
             if ($this->stopWhenError) {
                 throw new RuntimeException(DBO::class . ".query: " . json_encode($this->conn->errorInfo()) . "\n");
             } else {
@@ -167,7 +167,7 @@ class DBO implements JsonSerializable
                         if (!empty($row)) {
                             $this->results[] = $row;
                         }
-                    } else if (!empty($this->conn->errorInfo())) {
+                    } else if (!empty($this->conn->errorInfo()) && (int)$this->conn->errorCode() > 0) {
                         self::$errors[] = $this->conn->errorInfo();
                     }
                 } else {
@@ -179,13 +179,13 @@ class DBO implements JsonSerializable
                                 $this->results[] = $row;
                             }
                         }
-                    } else if (!empty($this->conn->errorInfo())) {
+                    } else if (!empty($this->conn->errorInfo()) && (int)$this->conn->errorCode() > 0) {
                         self::$errors[] = $this->conn->errorInfo();
                     }
                 }
             } else {
                 $result = $this->conn->query($query);
-                if (is_bool($result) && !$result && !empty($this->conn->errorInfo())) {
+                if (is_bool($result) && !$result && !empty($this->conn->errorInfo()) && (int)$this->conn->errorCode() > 0) {
                     if ($this->stopWhenError || $stopWhenError) {
                         throw new RuntimeException(DBO::class . ".query: " . json_encode($this->conn->errorInfo()) . "\n");
                     } else {
