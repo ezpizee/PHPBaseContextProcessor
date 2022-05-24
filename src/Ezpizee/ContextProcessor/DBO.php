@@ -111,63 +111,28 @@ class DBO implements JsonSerializable
 
     public function exec(string $query = ''): bool {return $this->execute($query);}
 
-    public function executeMultipleQueries(string $queries): void
-    {
-        $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, 0);
-        $this->conn->exec($queries);
-        if ($this->conn->errorInfo()) {
-            self::$errors[] = $this->conn->errorInfo();
-        }
-        if ($this->isDebug) {
-            $this->queries[] = $queries;
-        }
-    }
-
     public function executeQuery(string $query): bool {return $this->execute($query);}
 
     public function execute(string $query = ''): bool
     {
-        if ($query) {
-            $this->setQuery($query);
+        if ($this->isDebug) {
+            $this->queries[] = $query;
         }
-        if ($this->stm) {
-            $this->reset();
-            $arr = explode(";\n", $this->stm);
-            if (sizeof($arr) > 1) {
-                $query = '';
-                foreach ($arr as $line) {
-                    // Skip it if it's a comment
-                    if ((substr($line, 0, 2) === '--' || trim($line) === '') ||
-                        (strlen(trim($line)) > 3 && substr(trim($line), 0, 3) === '/*!' &&
-                            substr(trim($line), -3, 3) === '*/;')
-                    ) {
-                        continue;
-                    }
-
-                    // Add this line to the current segment
-                    $query .= $line;
-
-                    // If it has a semicolon at the end, it's the end of the query
-                    if (substr(trim($line), -1, 1) === ';') {
-                        $this->query(substr($query, 0, strlen($query) - 1));
-                        // Reset temp variable to empty
-                        $query = '';
-                    }
-                    else if (trim($query)) {
-                        $this->query($query);
-                        // Reset temp variable to empty
-                        $query = '';
-                    }
-                }
+        $exec = $this->conn->exec($query);
+        if (!empty($this->conn->errorInfo())) {
+            if ($this->stopWhenError) {
+                throw new RuntimeException(DBO::class . ".query: " . json_encode($this->conn->errorInfo()) . "\n");
+            } else {
+                self::$errors[] = $this->conn->errorInfo();
             }
-            else {
-                $this->query($this->stm);
-            }
-            return sizeof(self::$errors) < 1;
         }
-        else {
-            throw new RuntimeException(DBO::class . '.execute: query statement is empty', 500);
-        }
+        return $exec;
+    }
+
+    public function executeMultipleQueries(string $queries): bool
+    {
+        $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, 0);
+        return $this->execute($queries);
     }
 
     public function setQuery(string $stm): void {$this->stm = str_replace('#__', $this->getPrefix(), $stm);}
