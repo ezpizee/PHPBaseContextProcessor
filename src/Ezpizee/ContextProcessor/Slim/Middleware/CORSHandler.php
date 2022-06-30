@@ -4,6 +4,7 @@ namespace Ezpizee\ContextProcessor\Slim\Middleware;
 
 use Exception;
 use Ezpizee\ContextProcessor\Slim\DBOContainer;
+use Ezpizee\Utils\Constants;
 use Ezpizee\Utils\Logger;
 use Ezpizee\Utils\Request as EzRequest;
 use Ezpizee\Utils\RequestEndpointValidator;
@@ -51,16 +52,13 @@ class CORSHandler
         $method = $req->getMethod();
         $headers = $request->getHeaderKeysAsString();
         $isAjax = $this->isAjaxRequest($req, $request);
-        $token = $request->getHeaderParam('X-CSRF-Token', '');
         $requestUniqueId = $request->getUserInfoAsUniqueId();
 
-        if ($isAjax && $origin && $referer &&
-            (strpos($referer, $origin) !== false || $referer === $origin) &&
-            strpos($origin, $_SERVER['HTTP_HOST']) === false) {
+        if ($isAjax && !empty($origin) && strpos($origin, $_SERVER['HTTP_HOST']) === false) {
             $uri = strip_tags($req->getUri()->getPath());
             $merchantPublicKey = strip_tags($req->getHeaderLine('merchant_public_key'));
             if (empty($merchantPublicKey)) {
-                RequestEndpointValidator::validate($uri, $this->endPointPath, $method==='OPTIONS' ? null : $method);
+                RequestEndpointValidator::validate($uri, $this->endPointPath, $method==='OPTIONS' ? null : $method, false);
                 $merchantPublicKey = RequestEndpointValidator::getUriParam('public_key');
             }
             if (!empty($merchantPublicKey)) {
@@ -68,7 +66,7 @@ class CORSHandler
             }
         }
 
-        if ($allow || ($this->passCORS && $this->validCSRFToken($em, $token, $requestUniqueId, $method, $origin))) {
+        if ($allow || $this->passCORS) {
             header('Access-Control-Allow-Origin: '.$origin);
             header('Access-Control-Allow-Headers: '.$headers);
             header('Access-Control-Allow-Methods: '.$method);
@@ -78,18 +76,30 @@ class CORSHandler
     public function isAjaxRequest(Request $slimRequest, EzRequest $request): bool {
         $requestHeaders = explode(',', $slimRequest->getHeaderLine('Access-Control-Request-Headers'));
         return $request->isAjax() ||
-            $slimRequest->getHeaderLine('X-Requested-With') === 'EzpizeeHttpClient' ||
-            in_array('x-requested-with', $requestHeaders);
+            $slimRequest->getHeaderLine(Constants::HEADER_KEY_REQUESTED_WITH) === 'EzpizeeHttpClient' ||
+            (
+                in_array(strtolower(Constants::HEADER_KEY_REQUESTED_WITH), $requestHeaders) &&
+                in_array(strtolower(Constants::HEADER_KEY_FORM_PUB_KEY), $requestHeaders)
+            ) ||
+            (
+                in_array(strtolower(Constants::HEADER_KEY_REQUESTED_WITH), $requestHeaders) &&
+                in_array(strtolower(Constants::HEADER_KEY_FORM_TOKEN), $requestHeaders)
+            ) ||
+            (
+                in_array(strtolower(Constants::HEADER_KEY_REQUESTED_WITH), $requestHeaders) &&
+                in_array(strtolower(Constants::HEADER_KEY_FORM_PUB_KEY), $requestHeaders) &&
+                in_array(strtolower(Constants::HEADER_KEY_FORM_TOKEN), $requestHeaders)
+            );
     }
 
     public function isPassCORS(): bool {return $this->passCORS;}
 
     private function passCOSR(DBOContainer $em, string $publicKey, string $origin): void
     {
-        if (UUID::isValid($publicKey)) {
+        if (UUID::isValid($publicKey) && defined('EZECO_AUTH_HOST')) {
             $host = StringUtil::getHost($origin);
-            $uri = EZECO_AUTH_HOST.'/api/host/validate/'.$publicKey;
-            $resp = UnirestClient::get($uri, [
+            $uri = EZECO_AUTH_HOST.'/api/client/validate/publickey/'.$publicKey.'/'.$host;
+            $resp = UnirestClient::post($uri, [
                 'Ref-Host' => $host
             ]);
             if ($resp->code === 200 && $resp->raw_body) {
@@ -101,29 +111,5 @@ class CORSHandler
                 }
             }
         }
-    }
-
-    private function validCSRFToken(DBOContainer $em, string $token, string $requestUniqueId, string $method, string $origin): bool
-    {
-        if ($method === 'OPTIONS') {
-            return true;
-        }
-        if (UUID::isValid($token)) {
-            $host = StringUtil::getHost($origin);
-            $uri = EZECO_AUTH_HOST.'/api/csrf/validate/'.$token;
-            $resp = UnirestClient::get($uri, [
-                'Ref-Host' => $host,
-                'Request-Unique-Id' => $requestUniqueId
-            ]);
-            if ($resp->code === 200 && $resp->raw_body) {
-                $respContent = json_decode($resp->raw_body, true);
-                if (is_array($respContent) &&
-                    isset($respContent['data']) &&
-                    isset($respContent['data'][$token])) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 }
