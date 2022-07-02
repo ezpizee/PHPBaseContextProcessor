@@ -13,6 +13,7 @@ use RuntimeException;
 class DBO implements JsonSerializable
 {
     private static array $errors = [];
+    private static array $queries = [];
     private static array $connections = [];
     /** @var PDO|resource|false $conn */
     private $conn;
@@ -21,7 +22,6 @@ class DBO implements JsonSerializable
     private bool $stopWhenError = false;
     private bool $keepResults = false;
     private array $results = [];
-    private array $queries = [];
     private bool $isDebug = false;
     private array $cachedResults = [];
 
@@ -94,7 +94,7 @@ class DBO implements JsonSerializable
 
     public static function getErrors(): array {return self::$errors;}
 
-    public function getDebugQueries(): array {return $this->queries;}
+    public static function getDebugQueries(): array {return self::$queries;}
 
     public function closeConnection(): void
     {
@@ -109,14 +109,22 @@ class DBO implements JsonSerializable
 
     public function lastInsertId() { return $this->isConnected() ? $this->conn->lastInsertId() : 0; }
 
-    public function exec(string $query = ''): bool {return $this->execute($query);}
+    public function exec(string $query = ''): bool { return $this->execute($query); }
 
-    public function executeQuery(string $query): bool {return $this->execute($query);}
+    public function executeQuery(string $query): bool { return $this->execute($query); }
 
     public function execute(string $query = ''): bool
     {
-        if ($this->isDebug) {
-            $this->queries[] = $query;
+        if (empty($query)) {
+            if ($this->stm) {
+                $query = $this->stm;
+            }
+            else if ($this->isDebug) {
+                throw new RuntimeException(json_encode(debug_backtrace()));
+            }
+        }
+        if ($this->isDebug && defined('EZPIZEE_STACK_SQL_STM') && EZPIZEE_STACK_SQL_STM) {
+            self::$queries[] = $query;
         }
         $exec = $this->conn->exec($query);
         if (!empty($this->conn->errorInfo()) && (int)$this->conn->errorCode() > 0) {
@@ -155,8 +163,8 @@ class DBO implements JsonSerializable
         }
         else {
             if (!$this->conn) {Logger::debug($query);}
-            if ($this->isDebug) {
-                $this->queries[] = $query;
+            if ($this->isDebug && defined('EZPIZEE_STACK_SQL_STM') && EZPIZEE_STACK_SQL_STM) {
+                self::$queries[] = $query;
             }
 
             if ($fetchResult) {
