@@ -214,7 +214,39 @@ class DBO implements JsonSerializable
 
     public final function alterStorageEngine(string $tb, string $engine): void {$this->exec('ALTER'.' TABLE '.$tb.' ENGINE = '.$engine);}
 
-    public function quoteName(string $str): string {return '`' . $str . '`';}
+    public function quoteName($value): string
+    {
+        return '`' . (is_array($value) ? implode('`,`', $value) : $value) . '`';
+    }
+
+    public function quote($value, string $separator=''): string
+    {
+        if ($this->isConnected()) {
+            if (is_object($value)) {
+                return $this->conn->quote(json_encode($value));
+            }
+            else if (is_array($value)) {
+                if (!empty($separator)) {
+                    foreach ($value as $i=>$item) {
+                        $value[$i] = $this->conn->quote($item);
+                    }
+                    return implode($separator, $value);
+                }
+                return $this->conn->quote(json_encode($value));
+            }
+            else if (!empty($separator)) {
+                $arr = explode($separator, $value);
+                foreach ($arr as $i=>$item) {
+                    $arr[$i] = $this->conn->quote($item);
+                }
+                return implode($separator, $arr);
+            }
+            else {
+                return $this->conn->quote($value);
+            }
+        }
+        return $value;
+    }
 
     public function loadAssocList(string $query = ''): array
     {
@@ -263,8 +295,6 @@ class DBO implements JsonSerializable
         $row = $this->loadAssoc($dbExistStm);
         return !empty($row) && is_array($row) && isset($row['SCHEMA_NAME']);
     }
-
-    public function quote(string $str): string {return $this->isConnected() ? $this->conn->quote($str) : $str;}
 
     public function loadAssoc(string $query = ''): array
     {
