@@ -281,7 +281,7 @@ final class NestedTree
                     $length = sizeof($rows);
                     if ($length) {
                         foreach ($rows as $i=>$row) {
-                            if ((int)$row['id'] === $this->referenceId) {
+                            if ($row['id'] === $this->referenceId) {
                                 if ($i===0) {
                                     return $this->storeAddNodeQueryAsArray('first');
                                 }
