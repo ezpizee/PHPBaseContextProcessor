@@ -349,6 +349,8 @@ class DBO implements JsonSerializable
 
     public function fetchAllAssociative(string $query): array {return $this->loadAssocList($query);}
 
+    public function renameTable(string $fromName, string $toName): void {$this->execute('RENAME TABLE `'.$fromName.'` TO `'.$toName);}
+
     public function getAllTables(string $db=''): array
     {
         $sql = 'SHOW TABLES'.($db ? ' FROM ' . $db : '');
