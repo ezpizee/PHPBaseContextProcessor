@@ -349,6 +349,19 @@ class DBO implements JsonSerializable
 
     public function fetchAllAssociative(string $query): array {return $this->loadAssocList($query);}
 
+    public function getAllTables(string $db=''): array
+    {
+        $sql = 'SHOW TABLES'.($db ? ' FROM ' . $db : '');
+        $rows = $this->fetchRows($sql);
+        $tables = [];
+        if (!empty($rows)) {
+            foreach ($rows as $row) {
+                $tables[] = end($row);
+            }
+        }
+        return $tables;
+    }
+
     public function getConnections(): array {return array_keys(self::$connections);}
 
     public function getConfig(): DBCredentials {return $this->config;}
