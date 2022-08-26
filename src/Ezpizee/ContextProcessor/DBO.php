@@ -353,6 +353,9 @@ class DBO implements JsonSerializable
 
     public function getAllTables(string $db=''): array
     {
+        if (empty($db)) {
+            $db = $this->config->dbName;
+        }
         $sql = 'SHOW TABLES'.($db ? ' FROM ' . $db : '');
         $rows = $this->fetchRows($sql);
         $tables = [];
